@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { calculateFrequencies, getResponseIdFromUrl } from '../../lib/utils'
+import { questionCategories, getAllValidColumns } from '../../lib/voicePreferences'
 import LoadingSpinner from '../components/LoadingSpinner'
 import ErrorMessage from '../components/ErrorMessage'
-import FrequencyChart from '../components/FrequencyChart'
 import QuestionSummary from '../components/QuestionSummary'
 
 export default function Report() {
@@ -56,25 +56,29 @@ export default function Report() {
 
   const { you: userResponses, allResponses } = reportData
 
-  const questions = Object.keys(userResponses)
-    .filter(qKey => qKey.match(/^Q\d+$/))
-    .sort((a, b) => {
-      const aNum = parseInt(a.replace('Q', ''))
-      const bNum = parseInt(b.replace('Q', ''))
-      return aNum - bNum
-    })
+  // Get all available questions and organize by category
+  const allQuestions = getAllValidColumns()
+  const availableQuestions = Object.keys(userResponses)
+    .filter(qKey => allQuestions.includes(qKey))
 
-  const questionsData = questions.map(question => {
-    const userAnswer = userResponses[question]
-    const { frequencies, totalResponses } = calculateFrequencies(allResponses, question)
-    
-    return {
-      question,
-      userAnswer,
-      frequencies,
-      totalResponses,
-      hasData: totalResponses > 0
-    }
+  // Group questions by category for organized display
+  const questionsByCategory = {}
+  Object.entries(questionCategories).forEach(([categoryKey, category]) => {
+    questionsByCategory[categoryKey] = category.questions
+      .filter(q => availableQuestions.includes(q))
+      .map(question => {
+        const userAnswer = userResponses[question]
+        const { frequencies, totalResponses } = calculateFrequencies(allResponses, question)
+        
+        return {
+          question,
+          userAnswer,
+          frequencies,
+          totalResponses,
+          hasData: totalResponses > 0
+        }
+      })
+      .filter(q => q.hasData) // Only show questions with data
   })
 
   return (
@@ -85,53 +89,49 @@ export default function Report() {
           fontSize: '2.5rem',
           marginBottom: '0.5rem'
         }}>
-          Survey Response Report
+          Voice Preferences Survey Report
         </h1>
         <p style={{ color: 'var(--color-muted)', fontSize: '1.1rem' }}>
           <strong>Response ID:</strong> {responseId}
         </p>
         <p style={{ color: 'var(--color-muted)', fontSize: '0.95rem', marginTop: '0.5rem' }}>
-          Showing how your answers compare to {allResponses.length} total responses
+          Comparing your voice preference ratings with {allResponses.length} total responses
         </p>
       </div>
 
-      {questionsData.length > 0 ? (
-        <>
-          <div style={{ marginBottom: '3rem' }}>
-            {questionsData
-              .filter(q => q.hasData && Object.keys(q.frequencies).length > 1)
-              .slice(0, 3)
-              .map(questionData => (
-                <FrequencyChart
-                  key={questionData.question}
-                  frequencies={questionData.frequencies}
-                  userAnswer={questionData.userAnswer}
-                  question={questionData.question}
-                />
-              ))}
-          </div>
+      {Object.keys(questionsByCategory).some(cat => questionsByCategory[cat].length > 0) ? (
+        <div>
+          {Object.entries(questionCategories).map(([categoryKey, category]) => {
+            const categoryQuestions = questionsByCategory[categoryKey] || []
+            if (categoryQuestions.length === 0) return null
 
-          <div>
-            <h2 style={{ 
-              color: 'var(--color-primary)', 
-              marginBottom: '1.5rem',
-              fontSize: '1.8rem'
-            }}>
-              All Questions Summary
-            </h2>
-            <div className="grid">
-              {questionsData.map(questionData => (
-                <QuestionSummary
-                  key={questionData.question}
-                  question={questionData.question}
-                  userAnswer={questionData.userAnswer}
-                  frequencies={questionData.frequencies}
-                  totalResponses={questionData.totalResponses}
-                />
-              ))}
-            </div>
-          </div>
-        </>
+            return (
+              <div key={categoryKey} style={{ marginBottom: '3rem' }}>
+                <h2 style={{ 
+                  color: 'var(--color-primary)', 
+                  marginBottom: '1.5rem',
+                  fontSize: '1.6rem',
+                  borderBottom: '2px solid var(--color-primary)',
+                  paddingBottom: '0.5rem'
+                }}>
+                  {category.title}
+                </h2>
+                
+                <div className="grid">
+                  {categoryQuestions.map(questionData => (
+                    <QuestionSummary
+                      key={questionData.question}
+                      question={questionData.question}
+                      userAnswer={questionData.userAnswer}
+                      frequencies={questionData.frequencies}
+                      totalResponses={questionData.totalResponses}
+                    />
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
       ) : (
         <div style={{
           textAlign: 'center',

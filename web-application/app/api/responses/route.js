@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { processQuestionData } from '../../../lib/voicePreferences'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -9,18 +10,14 @@ const supabase = createClient(
 export async function POST(request) {
   try {
     const body = await request.json()
-    const { responseId, ...questionData } = body
+    const { ResponseId, ...questionData } = body
 
-    const questionFields = {}
-    Object.keys(questionData).forEach(key => {
-      if (key.match(/^Q\d+$/)) {
-        questionFields[key] = questionData[key]
-      }
-    })
+    // Process and validate question data using utility function
+    const processedQuestionData = processQuestionData(questionData)
 
     const insertData = {
-      responseId,
-      ...questionFields
+      ResponseId,
+      ...processedQuestionData
     }
 
     const { error } = await supabase

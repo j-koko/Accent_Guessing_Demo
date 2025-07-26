@@ -7,7 +7,7 @@ export default function Home() {
         textAlign: 'center',
         marginBottom: '1rem'
       }}>
-        QualMetrics Dashboard
+        Voice Preferences Analytics Dashboard
       </h1>
       <p style={{ 
         textAlign: 'center', 
@@ -15,7 +15,7 @@ export default function Home() {
         marginBottom: '3rem',
         fontSize: '1.1rem'
       }}>
-        Survey analytics for Qualtrics data
+        Analytics dashboard for voice preference survey data
       </p>
       
       <div style={{ 
@@ -27,7 +27,7 @@ export default function Home() {
         <h2 style={{ marginBottom: '1rem' }}>View Your Report</h2>
         <p>Visit: <code>/report?responseId=YOUR_RESPONSE_ID</code></p>
         <p style={{ fontSize: '0.9rem', color: 'var(--color-muted)', marginTop: '0.5rem' }}>
-          Replace YOUR_RESPONSE_ID with your actual Qualtrics response ID.
+          Replace YOUR_RESPONSE_ID with your actual response ID.
         </p>
       </div>
 

@@ -3,21 +3,55 @@
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- Create responses table
+-- Create responses table matching CSV structure
 CREATE TABLE public.responses (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  responseId  TEXT UNIQUE NOT NULL,
+  ResponseId  TEXT UNIQUE NOT NULL,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-  Q1          TEXT,
-  Q2          TEXT,
-  Q3          TEXT,
-  Q4          TEXT,
-  Q5          TEXT,
-  Q6          TEXT,
-  Q7          TEXT,
-  Q8          TEXT,
-  Q9          TEXT,
-  Q10         TEXT
+  q1_language TEXT,
+  q1_text     TEXT,
+  q2          TEXT,
+  q3          TEXT,
+  q1_1a       INTEGER,
+  q1_1b       INTEGER,
+  q1_2a       INTEGER,
+  q1_2b       INTEGER,
+  q1_3a       INTEGER,
+  q1_3b       INTEGER,
+  q1_4a       INTEGER,
+  q1_4b       INTEGER,
+  q2_1a       INTEGER,
+  q2_1b       INTEGER,
+  q2_2a       INTEGER,
+  q2_2b       INTEGER,
+  q2_3a       INTEGER,
+  q2_3b       INTEGER,
+  q2_4a       INTEGER,
+  q2_4b       INTEGER,
+  q3_1a       INTEGER,
+  q3_1b       INTEGER,
+  q3_2a       INTEGER,
+  q3_2b       INTEGER,
+  q3_3a       INTEGER,
+  q3_3b       INTEGER,
+  q3_4a       INTEGER,
+  q3_4b       INTEGER,
+  q4_1a       INTEGER,
+  q4_1b       INTEGER,
+  q4_2a       INTEGER,
+  q4_2b       INTEGER,
+  q4_3a       INTEGER,
+  q4_3b       INTEGER,
+  q4_4a       INTEGER,
+  q4_4b       INTEGER,
+  q5_1a       INTEGER,
+  q5_1b       INTEGER,
+  q5_2a       INTEGER,
+  q5_2b       INTEGER,
+  q5_3a       INTEGER,
+  q5_3b       INTEGER,
+  q5_4a       INTEGER,
+  q5_4b       INTEGER
 );
 
 ALTER TABLE public.responses ENABLE ROW LEVEL SECURITY;
@@ -30,5 +64,5 @@ FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow anonymous reads" ON public.responses
 FOR SELECT USING (true);
 
--- Create index on responseId for faster lookups
-CREATE INDEX idx_responses_response_id ON public.responses(responseId);
+-- Create index on ResponseId for faster lookups
+CREATE INDEX idx_responses_response_id ON public.responses(ResponseId);

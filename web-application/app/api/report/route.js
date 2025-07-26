@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { getAllValidColumns } from '../../../lib/voicePreferences'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -23,15 +24,18 @@ export async function GET(request) {
       return NextResponse.json({ error: 'No responses found' }, { status: 404 })
     }
 
-    const userResponse = allResponses.find(r => r.responseId === responseId)
+    const userResponse = allResponses.find(r => r.ResponseId === responseId)
     
     if (!userResponse) {
       return NextResponse.json({ error: 'Response not found' }, { status: 404 })
     }
 
+    // Extract all question-related data from the response
     const userQuestionData = {}
-    Object.keys(userResponse).forEach(key => {
-      if (key.match(/^Q\d+$/)) {
+    const questionColumns = getAllValidColumns()
+    
+    questionColumns.forEach(key => {
+      if (userResponse[key] !== undefined) {
         userQuestionData[key] = userResponse[key]
       }
     })
