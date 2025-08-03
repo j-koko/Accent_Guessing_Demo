@@ -8,7 +8,7 @@ A web-based demo for the Science Festival at Interspeech 2025 where participants
 2. **Run the script** from the terminal, providing a participant’s `ResponseId`:
 
    ```bash
-   python analyze_voice_ratings.py R_2dV8oFbAIyxQ75f
+   python accent_metrics.py R_2dV8oFbAIyxQ75f
 
 The script will:
 
