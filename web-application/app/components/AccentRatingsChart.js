@@ -13,13 +13,27 @@ const CHART_COLORS = {
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-background p-3 border border-border rounded-lg shadow-lg">
-        <p className="font-medium text-foreground mb-2">{`${label}`}</p>
-        {payload.map((entry, index) => (
-          <p key={index} className="text-sm" style={{ color: entry.color }}>
-            {`${entry.dataKey}: ${entry.value.toFixed(2)}`}
-          </p>
-        ))}
+      <div className="bg-white/95 backdrop-blur-sm p-4 border-0 rounded-xl shadow-xl">
+        <p className="font-semibold text-foreground mb-3 text-center border-b pb-2">{`${label}`}</p>
+        <div className="space-y-1">
+          {payload.map((entry, index) => (
+            <div key={index} className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <div 
+                  className="w-3 h-3 rounded-sm" 
+                  style={{ backgroundColor: entry.color }}
+                />
+                <span className="text-sm font-medium">{entry.name}:</span>
+              </div>
+              <span 
+                className="text-sm font-bold"
+                style={{ color: entry.color }}
+              >
+                {entry.value.toFixed(2)}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
@@ -55,69 +69,75 @@ export default function AccentRatingsChart({
   }
 
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className={`space-y-8 ${className}`}>
       {/* Trustworthiness Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl text-primary">Trustworthiness Ratings</CardTitle>
-          <CardDescription>
-            Participant: {participantL1} • Rating scale: 0-5
+      <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
+        <CardHeader className="text-center pb-2">
+          <CardTitle className="text-2xl font-bold text-primary flex items-center justify-center gap-2">
+            <span className="text-blue-500">🔒</span>
+            Trustworthiness Ratings
+          </CardTitle>
+          <CardDescription className="text-base">
+            How trustworthy do different accents sound? • Scale: 0-5 
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
+        <CardContent className="p-6">
+          <ResponsiveContainer width="100%" height={350}>
             <BarChart
               data={trustData.data}
               margin={{
                 top: 20,
                 right: 30,
                 left: 20,
-                bottom: 60,
+                bottom: 80,
               }}
-              barCategoryGap="15%"
+              barCategoryGap="20%"
             >
-              <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+              <CartesianGrid strokeDasharray="3 3" className="opacity-20" />
               <XAxis 
                 dataKey="accent" 
                 tickFormatter={formatAxisLabel}
                 angle={-45}
                 textAnchor="end"
-                height={80}
-                fontSize={12}
+                height={100}
+                fontSize={13}
+                className="font-medium"
               />
               <YAxis 
                 domain={[0, 5]} 
                 tickCount={6}
-                fontSize={12}
+                fontSize={13}
+                className="font-medium"
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend 
-                wrapperStyle={{ paddingTop: '20px' }}
+                wrapperStyle={{ paddingTop: '24px' }}
                 iconType="rect"
+                className="text-sm"
               />
               <Bar 
                 dataKey="participant" 
                 fill={CHART_COLORS.participant} 
                 name="Your Rating"
-                radius={[2, 2, 0, 0]}
+                radius={[4, 4, 0, 0]}
               />
               <Bar 
                 dataKey="sameL1Avg" 
                 fill={CHART_COLORS.sameL1Avg} 
                 name="Same L1 Average"
-                radius={[2, 2, 0, 0]}
+                radius={[4, 4, 0, 0]}
               />
               <Bar 
                 dataKey="otherL1Avg" 
                 fill={CHART_COLORS.otherL1Avg} 
                 name="Other L1 Average"
-                radius={[2, 2, 0, 0]}
+                radius={[4, 4, 0, 0]}
               />
               <Bar 
                 dataKey="voiceL1Avg" 
                 fill={CHART_COLORS.voiceL1Avg} 
                 name="Voice L1 Average"
-                radius={[2, 2, 0, 0]}
+                radius={[4, 4, 0, 0]}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -125,67 +145,73 @@ export default function AccentRatingsChart({
       </Card>
 
       {/* Pleasantness Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl text-primary">Pleasantness Ratings</CardTitle>
-          <CardDescription>
-            Participant: {participantL1} • Rating scale: 0-5
+      <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
+        <CardHeader className="text-center pb-2">
+          <CardTitle className="text-2xl font-bold text-primary flex items-center justify-center gap-2">
+            <span className="text-green-500">😊</span>
+            Pleasantness Ratings
+          </CardTitle>
+          <CardDescription className="text-base">
+            How pleasant do different accents sound? • Scale: 0-5
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
+        <CardContent className="p-6">
+          <ResponsiveContainer width="100%" height={350}>
             <BarChart
               data={pleasantData.data}
               margin={{
                 top: 20,
                 right: 30,
                 left: 20,
-                bottom: 60,
+                bottom: 80,
               }}
-              barCategoryGap="15%"
+              barCategoryGap="20%"
             >
-              <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+              <CartesianGrid strokeDasharray="3 3" className="opacity-20" />
               <XAxis 
                 dataKey="accent" 
                 tickFormatter={formatAxisLabel}
                 angle={-45}
                 textAnchor="end"
-                height={80}
-                fontSize={12}
+                height={100}
+                fontSize={13}
+                className="font-medium"
               />
               <YAxis 
                 domain={[0, 5]} 
                 tickCount={6}
-                fontSize={12}
+                fontSize={13}
+                className="font-medium"
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend 
-                wrapperStyle={{ paddingTop: '20px' }}
+                wrapperStyle={{ paddingTop: '24px' }}
                 iconType="rect"
+                className="text-sm"
               />
               <Bar 
                 dataKey="participant" 
                 fill={CHART_COLORS.participant} 
                 name="Your Rating"
-                radius={[2, 2, 0, 0]}
+                radius={[4, 4, 0, 0]}
               />
               <Bar 
                 dataKey="sameL1Avg" 
                 fill={CHART_COLORS.sameL1Avg} 
                 name="Same L1 Average"
-                radius={[2, 2, 0, 0]}
+                radius={[4, 4, 0, 0]}
               />
               <Bar 
                 dataKey="otherL1Avg" 
                 fill={CHART_COLORS.otherL1Avg} 
                 name="Other L1 Average"
-                radius={[2, 2, 0, 0]}
+                radius={[4, 4, 0, 0]}
               />
               <Bar 
                 dataKey="voiceL1Avg" 
                 fill={CHART_COLORS.voiceL1Avg} 
                 name="Voice L1 Average"
-                radius={[2, 2, 0, 0]}
+                radius={[4, 4, 0, 0]}
               />
             </BarChart>
           </ResponsiveContainer>
