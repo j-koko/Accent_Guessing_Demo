@@ -1,11 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { calculateFrequencies, getResponseIdFromUrl } from '../../lib/utils'
-import { questionCategories, getAllValidColumns } from '../../lib/voicePreferences'
+import { getResponseIdFromUrl } from '../../lib/utils'
 import LoadingSpinner from '../components/LoadingSpinner'
 import ErrorMessage from '../components/ErrorMessage'
-import QuestionSummary from '../components/QuestionSummary'
+import AccentRatingsChart from '../components/AccentRatingsChart'
 
 export default function Report() {
   const [reportData, setReportData] = useState(null)
@@ -54,96 +53,51 @@ export default function Report() {
   if (error) return <ErrorMessage error={error} onRetry={refetch} />
   if (!reportData) return <div>No data</div>
 
-  const { you: userResponses, allResponses } = reportData
-
-  // Get all available questions and organize by category
-  const allQuestions = getAllValidColumns()
-  const availableQuestions = Object.keys(userResponses)
-    .filter(qKey => allQuestions.includes(qKey))
-
-  // Group questions by category for organized display
-  const questionsByCategory = {}
-  Object.entries(questionCategories).forEach(([categoryKey, category]) => {
-    questionsByCategory[categoryKey] = category.questions
-      .filter(q => availableQuestions.includes(q))
-      .map(question => {
-        const userAnswer = userResponses[question]
-        const { frequencies, totalResponses } = calculateFrequencies(allResponses, question)
-        
-        return {
-          question,
-          userAnswer,
-          frequencies,
-          totalResponses,
-          hasData: totalResponses > 0
-        }
-      })
-      .filter(q => q.hasData) // Only show questions with data
-  })
+  const { accentMetrics } = reportData
 
   return (
-    <div className="container">
-      <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
-        <h1 style={{
-          color: 'var(--color-primary)',
-          fontSize: '2.5rem',
-          marginBottom: '0.5rem'
-        }}>
-          Voice Preferences Survey Report
-        </h1>
-        <p style={{ color: 'var(--color-muted)', fontSize: '1.1rem' }}>
-          <strong>Response ID:</strong> {responseId}
-        </p>
-        <p style={{ color: 'var(--color-muted)', fontSize: '0.95rem', marginTop: '0.5rem' }}>
-          Comparing your voice preference ratings with {allResponses.length} total responses
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-primary mb-4">
+            Voice Accent Ratings Report
+          </h1>
+          <div className="space-y-2">
+            <p className="text-lg text-muted-foreground">
+              <span className="font-medium">Response ID:</span> {responseId}
+            </p>
+            {accentMetrics && (
+              <>
+                <p className="text-muted-foreground">
+                  <span className="font-medium">Your Native Language:</span> {accentMetrics.participantL1}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Comparing your ratings with {accentMetrics.metadata.totalResponses} total responses
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Accent Ratings Charts */}
+        {accentMetrics ? (
+          <AccentRatingsChart
+            trustData={accentMetrics.trustData}
+            pleasantData={accentMetrics.pleasantData}
+            participantL1={accentMetrics.participantL1}
+            className="max-w-5xl mx-auto"
+          />
+        ) : (
+          <div className="text-center p-8">
+            <div className="bg-white rounded-lg shadow-sm border p-8">
+              <p className="text-muted-foreground text-lg">
+                No accent ratings data available for this response.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
-
-      {Object.keys(questionsByCategory).some(cat => questionsByCategory[cat].length > 0) ? (
-        <div>
-          {Object.entries(questionCategories).map(([categoryKey, category]) => {
-            const categoryQuestions = questionsByCategory[categoryKey] || []
-            if (categoryQuestions.length === 0) return null
-
-            return (
-              <div key={categoryKey} style={{ marginBottom: '3rem' }}>
-                <h2 style={{ 
-                  color: 'var(--color-primary)', 
-                  marginBottom: '1.5rem',
-                  fontSize: '1.6rem',
-                  borderBottom: '2px solid var(--color-primary)',
-                  paddingBottom: '0.5rem'
-                }}>
-                  {category.title}
-                </h2>
-                
-                <div className="grid">
-                  {categoryQuestions.map(questionData => (
-                    <QuestionSummary
-                      key={questionData.question}
-                      question={questionData.question}
-                      userAnswer={questionData.userAnswer}
-                      frequencies={questionData.frequencies}
-                      totalResponses={questionData.totalResponses}
-                    />
-                  ))}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      ) : (
-        <div style={{
-          textAlign: 'center',
-          padding: '3rem',
-          backgroundColor: 'var(--color-background)',
-          borderRadius: '12px'
-        }}>
-          <p style={{ color: 'var(--color-muted)', fontSize: '1.1rem' }}>
-            No survey responses found.
-          </p>
-        </div>
-      )}
     </div>
   )
 }

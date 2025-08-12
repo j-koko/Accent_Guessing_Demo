@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { getAllValidColumns } from '../../../lib/voicePreferences'
+import { calculateAccentMetrics } from '../../../lib/accentMetrics'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -40,9 +41,18 @@ export async function GET(request) {
       }
     })
 
+    // Calculate accent metrics
+    let accentMetrics = null;
+    try {
+      accentMetrics = calculateAccentMetrics(responseId, allResponses);
+    } catch (error) {
+      console.warn('Error calculating accent metrics:', error.message);
+    }
+
     const result = {
       you: userQuestionData,
-      allResponses: allResponses
+      allResponses: allResponses,
+      accentMetrics: accentMetrics
     }
 
     return NextResponse.json(result)
