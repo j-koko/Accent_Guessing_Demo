@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
+import { Switch } from './ui/switch'
 
 const CHART_COLORS = {
   participant: '#2563eb',      // Blue - primary accent
@@ -52,6 +53,137 @@ const formatAxisLabel = (tickItem) => {
   return shortNames[tickItem] || tickItem
 }
 
+// Reusable Chart Component to follow DRY principles
+const Chart = ({ 
+  data, 
+  title, 
+  useAutoScale, 
+  onToggleScale, 
+  domain, 
+  isMobile 
+}) => {
+  return (
+    <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
+      <CardHeader className="text-center pb-2">
+        <CardTitle className="text-2xl font-bold text-primary">
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-2 md:p-6">
+        {/* Mobile Legend */}
+        <div className="block md:hidden mb-3">
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: CHART_COLORS.participant }}></div>
+              <span className="font-medium">Your Rating</span>
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: CHART_COLORS.sameL1Avg }}></div>
+              <span className="font-medium">Same L1 Avg</span>
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: CHART_COLORS.otherL1Avg }}></div>
+              <span className="font-medium">Other L1 Avg</span>
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: CHART_COLORS.voiceL1Avg }}></div>
+              <span className="font-medium">Voice L1 Avg</span>
+            </div>
+          </div>
+        </div>
+        
+        <ResponsiveContainer width="100%" height={isMobile ? 380 : 350}>
+          <BarChart
+            data={data}
+            margin={{
+              top: 20,
+              right: isMobile ? 5 : 30,
+              left: isMobile ? 5 : 20,
+              bottom: isMobile ? 60 : 80,
+            }}
+            barCategoryGap={isMobile ? "10%" : "20%"}
+          >
+            <CartesianGrid strokeDasharray="3 3" className="opacity-20" />
+            <XAxis 
+              dataKey="accent" 
+              tickFormatter={formatAxisLabel}
+              angle={-45}
+              textAnchor="end"
+              height={isMobile ? 70 : 100}
+              fontSize={isMobile ? 11 : 13}
+              className="font-medium"
+            />
+            <YAxis 
+              domain={domain} 
+              tickCount={6}
+              fontSize={isMobile ? 10 : 13}
+              className="font-medium"
+              width={isMobile ? 25 : 60}
+              axisLine={false}
+              tickLine={false}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend 
+              wrapperStyle={{ 
+                paddingTop: '24px',
+                display: isMobile ? 'none' : 'block'
+              }}
+              iconType="rect"
+              className="text-sm hidden md:block"
+            />
+            <Bar 
+              dataKey="participant" 
+              fill={CHART_COLORS.participant} 
+              name="Your Rating"
+              radius={[3, 3, 0, 0]}
+              minPointSize={2}
+            />
+            <Bar 
+              dataKey="sameL1Avg" 
+              fill={CHART_COLORS.sameL1Avg} 
+              name="Same L1 Average"
+              radius={[3, 3, 0, 0]}
+              minPointSize={2}
+            />
+            <Bar 
+              dataKey="otherL1Avg" 
+              fill={CHART_COLORS.otherL1Avg} 
+              name="Other L1 Average"
+              radius={[3, 3, 0, 0]}
+              minPointSize={2}
+            />
+            <Bar 
+              dataKey="voiceL1Avg" 
+              fill={CHART_COLORS.voiceL1Avg} 
+              name="Voice L1 Average"
+              radius={[3, 3, 0, 0]}
+              minPointSize={2}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+        
+        {/* Scale Toggle at bottom-left, close to chart */}
+        <div className="flex justify-start -mt-8 ml-2 relative z-10">
+          <div className="flex flex-col items-start gap-1">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">0-5</span>
+              <Switch 
+                checked={useAutoScale}
+                onCheckedChange={onToggleScale}
+                className="data-[state=checked]:bg-green-500"
+              />
+              <span className="text-xs text-muted-foreground">Auto</span>
+            </div>
+            <span className="text-xs text-muted-foreground font-medium text-center w-full">
+              Scale
+            </span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 export default function AccentRatingsChart({ 
   trustData, 
   pleasantData, 
@@ -59,6 +191,8 @@ export default function AccentRatingsChart({
   className = "" 
 }) {
   const [isMobile, setIsMobile] = useState(false)
+  const [useAutoScaleTrust, setUseAutoScaleTrust] = useState(false)
+  const [useAutoScalePleasant, setUseAutoScalePleasant] = useState(false)
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -70,6 +204,34 @@ export default function AccentRatingsChart({
     
     return () => window.removeEventListener('resize', checkScreenSize)
   }, [])
+
+  // Calculate auto-scale range based on data
+  const getDataRange = (data) => {
+    if (!data || !data.data) return [0, 5]
+    
+    const allValues = data.data.flatMap(item => [
+      item.participant || 0,
+      item.sameL1Avg || 0,
+      item.otherL1Avg || 0,
+      item.voiceL1Avg || 0
+    ])
+    
+    const min = Math.min(...allValues)
+    const max = Math.max(...allValues)
+    
+    // Add some padding to the range
+    const padding = (max - min) * 0.1
+    return [
+      Math.max(0, Math.floor((min - padding) * 10) / 10),
+      Math.ceil((max + padding) * 10) / 10
+    ]
+  }
+
+  const trustRange = getDataRange(trustData)
+  const pleasantRange = getDataRange(pleasantData)
+  
+  const getTrustDomain = () => useAutoScaleTrust ? trustRange : [0, 5]
+  const getPleasantDomain = () => useAutoScalePleasant ? pleasantRange : [0, 5]
 
   if (!trustData || !pleasantData) {
     return (
@@ -84,209 +246,23 @@ export default function AccentRatingsChart({
 
   return (
     <div className={`space-y-8 ${className}`}>
-      {/* Trustworthiness Chart */}
-      <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-        <CardHeader className="text-center pb-2">
-          <CardTitle className="text-2xl font-bold text-primary flex items-center justify-center gap-2">
-            Trustworthiness Ratings
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-2 md:p-6">
-          {/* Mobile Legend */}
-          <div className="block md:hidden mb-4">
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: CHART_COLORS.participant }}></div>
-                <span className="font-medium">Your Rating</span>
-              </div>
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: CHART_COLORS.sameL1Avg }}></div>
-                <span className="font-medium">Same L1 Avg</span>
-              </div>
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: CHART_COLORS.otherL1Avg }}></div>
-                <span className="font-medium">Other L1 Avg</span>
-              </div>
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: CHART_COLORS.voiceL1Avg }}></div>
-                <span className="font-medium">Voice L1 Avg</span>
-              </div>
-            </div>
-          </div>
-          
-          <ResponsiveContainer width="100%" height={isMobile ? 380 : 350}>
-            <BarChart
-              data={trustData.data}
-              margin={{
-                top: 20,
-                right: isMobile ? 5 : 30,
-                left: isMobile ? 5 : 20,
-                bottom: isMobile ? 60 : 80,
-              }}
-              barCategoryGap={isMobile ? "10%" : "20%"}
-            >
-              <CartesianGrid strokeDasharray="3 3" className="opacity-20" />
-              <XAxis 
-                dataKey="accent" 
-                tickFormatter={formatAxisLabel}
-                angle={-45}
-                textAnchor="end"
-                height={isMobile ? 70 : 100}
-                fontSize={isMobile ? 11 : 13}
-                className="font-medium"
-              />
-              <YAxis 
-                domain={[0, 5]} 
-                tickCount={6}
-                fontSize={isMobile ? 10 : 13}
-                className="font-medium"
-                width={isMobile ? 25 : 60}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend 
-                wrapperStyle={{ 
-                  paddingTop: '24px',
-                  display: isMobile ? 'none' : 'block'
-                }}
-                iconType="rect"
-                className="text-sm hidden md:block"
-              />
-              <Bar 
-                dataKey="participant" 
-                fill={CHART_COLORS.participant} 
-                name="Your Rating"
-                radius={[3, 3, 0, 0]}
-                minPointSize={2}
-              />
-              <Bar 
-                dataKey="sameL1Avg" 
-                fill={CHART_COLORS.sameL1Avg} 
-                name="Same L1 Average"
-                radius={[3, 3, 0, 0]}
-                minPointSize={2}
-              />
-              <Bar 
-                dataKey="otherL1Avg" 
-                fill={CHART_COLORS.otherL1Avg} 
-                name="Other L1 Average"
-                radius={[3, 3, 0, 0]}
-                minPointSize={2}
-              />
-              <Bar 
-                dataKey="voiceL1Avg" 
-                fill={CHART_COLORS.voiceL1Avg} 
-                name="Voice L1 Average"
-                radius={[3, 3, 0, 0]}
-                minPointSize={2}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* Pleasantness Chart */}
-      <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-        <CardHeader className="text-center pb-2">
-          <CardTitle className="text-2xl font-bold text-primary flex items-center justify-center gap-2">
-            Pleasantness Ratings
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-2 md:p-6">
-          {/* Mobile Legend */}
-          <div className="block md:hidden mb-4">
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: CHART_COLORS.participant }}></div>
-                <span className="font-medium">Your Rating</span>
-              </div>
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: CHART_COLORS.sameL1Avg }}></div>
-                <span className="font-medium">Same L1 Avg</span>
-              </div>
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: CHART_COLORS.otherL1Avg }}></div>
-                <span className="font-medium">Other L1 Avg</span>
-              </div>
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: CHART_COLORS.voiceL1Avg }}></div>
-                <span className="font-medium">Voice L1 Avg</span>
-              </div>
-            </div>
-          </div>
-          
-          <ResponsiveContainer width="100%" height={isMobile ? 380 : 350}>
-            <BarChart
-              data={pleasantData.data}
-              margin={{
-                top: 20,
-                right: isMobile ? 5 : 30,
-                left: isMobile ? 5 : 20,
-                bottom: isMobile ? 60 : 80,
-              }}
-              barCategoryGap={isMobile ? "10%" : "20%"}
-            >
-              <CartesianGrid strokeDasharray="3 3" className="opacity-20" />
-              <XAxis 
-                dataKey="accent" 
-                tickFormatter={formatAxisLabel}
-                angle={-45}
-                textAnchor="end"
-                height={isMobile ? 70 : 100}
-                fontSize={isMobile ? 11 : 13}
-                className="font-medium"
-              />
-              <YAxis 
-                domain={[0, 5]} 
-                tickCount={6}
-                fontSize={isMobile ? 10 : 13}
-                className="font-medium"
-                width={isMobile ? 25 : 60}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend 
-                wrapperStyle={{ 
-                  paddingTop: '24px',
-                  display: isMobile ? 'none' : 'block'
-                }}
-                iconType="rect"
-                className="text-sm hidden md:block"
-              />
-              <Bar 
-                dataKey="participant" 
-                fill={CHART_COLORS.participant} 
-                name="Your Rating"
-                radius={[3, 3, 0, 0]}
-                minPointSize={2}
-              />
-              <Bar 
-                dataKey="sameL1Avg" 
-                fill={CHART_COLORS.sameL1Avg} 
-                name="Same L1 Average"
-                radius={[3, 3, 0, 0]}
-                minPointSize={2}
-              />
-              <Bar 
-                dataKey="otherL1Avg" 
-                fill={CHART_COLORS.otherL1Avg} 
-                name="Other L1 Average"
-                radius={[3, 3, 0, 0]}
-                minPointSize={2}
-              />
-              <Bar 
-                dataKey="voiceL1Avg" 
-                fill={CHART_COLORS.voiceL1Avg} 
-                name="Voice L1 Average"
-                radius={[3, 3, 0, 0]}
-                minPointSize={2}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+      <Chart
+        data={trustData.data}
+        title="Trustworthiness Ratings"
+        useAutoScale={useAutoScaleTrust}
+        onToggleScale={setUseAutoScaleTrust}
+        domain={getTrustDomain()}
+        isMobile={isMobile}
+      />
+      
+      <Chart
+        data={pleasantData.data}
+        title="Pleasantness Ratings"
+        useAutoScale={useAutoScalePleasant}
+        onToggleScale={setUseAutoScalePleasant}
+        domain={getPleasantDomain()}
+        isMobile={isMobile}
+      />
     </div>
   )
 }

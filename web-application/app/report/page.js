@@ -1,54 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { getResponseIdFromUrl } from '../../lib/utils'
 import LoadingSpinner from '../components/LoadingSpinner'
 import ErrorMessage from '../components/ErrorMessage'
 import AccentRatingsChart from '../components/AccentRatingsChart'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+import InfoCard from '../components/InfoCard'
+import NoDataCard from '../components/NoDataCard'
+import { useReportData } from '../../hooks/useReportData'
 
 export default function Report() {
-  const [reportData, setReportData] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [responseId, setResponseId] = useState('')
-
-  useEffect(() => {
-    const id = getResponseIdFromUrl()
-    
-    if (id) {
-      setResponseId(id)
-      fetchReport(id)
-    } else {
-      setError('No responseId provided in URL')
-      setLoading(false)
-    }
-  }, [])
-
-  const fetchReport = async (id) => {
-    try {
-      const response = await fetch(`/api/report?responseId=${encodeURIComponent(id)}`)
-      
-      if (response.ok) {
-        const data = await response.json()
-        setReportData(data)
-      } else {
-        setError('Failed to load report')
-      }
-    } catch (err) {
-      setError('Failed to load report')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const refetch = () => {
-    if (responseId) {
-      setLoading(true)
-      setError(null)
-      fetchReport(responseId)
-    }
-  }
+  const { reportData, loading, error, refetch } = useReportData()
 
   if (loading) return <LoadingSpinner />
   if (error) return <ErrorMessage error={error} onRetry={refetch} />
@@ -71,19 +31,14 @@ export default function Report() {
           {/* Participant Information Cards */}
           {accentMetrics && (
             <div className="grid grid-cols-2 gap-3 max-w-md mx-auto mb-6">
-              <Card className="border-0 shadow-md bg-white/70 backdrop-blur-sm">
-                <CardContent className="p-3 text-center">
-                  <p className="text-xs text-muted-foreground mb-1">Native Language</p>
-                  <p className="font-semibold text-foreground text-sm">{accentMetrics.participantL1}</p>
-                </CardContent>
-              </Card>
-              
-              <Card className="border-0 shadow-md bg-white/70 backdrop-blur-sm">
-                <CardContent className="p-3 text-center">
-                  <p className="text-xs text-muted-foreground mb-1">Total Responses</p>
-                  <p className="font-semibold text-foreground text-sm">{accentMetrics.metadata.totalResponses}</p>
-                </CardContent>
-              </Card>
+              <InfoCard 
+                label="Native Language" 
+                value={accentMetrics.participantL1} 
+              />
+              <InfoCard 
+                label="Total Responses" 
+                value={accentMetrics.metadata.totalResponses} 
+              />
             </div>
           )}
         </div>
@@ -99,17 +54,7 @@ export default function Report() {
             />
           </div>
         ) : (
-          <Card className="max-w-2xl mx-auto border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-            <CardContent className="p-12 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-                <span className="text-2xl">📊</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">No Data Available</h3>
-              <p className="text-muted-foreground">
-                No accent ratings data is available for this response ID. Please verify the ID and try again.
-              </p>
-            </CardContent>
-          </Card>
+          <NoDataCard />
         )}
       </div>
     </div>
