@@ -5,6 +5,7 @@ import { getResponseIdFromUrl } from '../../lib/utils'
 import LoadingSpinner from '../components/LoadingSpinner'
 import ErrorMessage from '../components/ErrorMessage'
 import AccentRatingsChart from '../components/AccentRatingsChart'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 
 export default function Report() {
   const [reportData, setReportData] = useState(null)
@@ -56,46 +57,59 @@ export default function Report() {
   const { accentMetrics } = reportData
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Header Section */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-primary mb-4">
-            Voice Accent Ratings Report
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary mb-6 tracking-tight">
+            Voice Accent Ratings
+            <span className="block text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text">
+              Analysis Report
+            </span>
           </h1>
-          <div className="space-y-2">
-            <p className="text-lg text-muted-foreground">
-              <span className="font-medium">Response ID:</span> {responseId}
-            </p>
-            {accentMetrics && (
-              <>
-                <p className="text-muted-foreground">
-                  <span className="font-medium">Your Native Language:</span> {accentMetrics.participantL1}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Comparing your ratings with {accentMetrics.metadata.totalResponses} total responses
-                </p>
-              </>
-            )}
-          </div>
+          
+          {/* Participant Information Cards */}
+          {accentMetrics && (
+            <div className="grid grid-cols-2 gap-3 max-w-md mx-auto mb-6">
+              <Card className="border-0 shadow-md bg-white/70 backdrop-blur-sm">
+                <CardContent className="p-3 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Native Language</p>
+                  <p className="font-semibold text-foreground text-sm">{accentMetrics.participantL1}</p>
+                </CardContent>
+              </Card>
+              
+              <Card className="border-0 shadow-md bg-white/70 backdrop-blur-sm">
+                <CardContent className="p-3 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Total Responses</p>
+                  <p className="font-semibold text-foreground text-sm">{accentMetrics.metadata.totalResponses}</p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
 
-        {/* Accent Ratings Charts */}
+        {/* Charts Section */}
         {accentMetrics ? (
-          <AccentRatingsChart
-            trustData={accentMetrics.trustData}
-            pleasantData={accentMetrics.pleasantData}
-            participantL1={accentMetrics.participantL1}
-            className="max-w-5xl mx-auto"
-          />
-        ) : (
-          <div className="text-center p-8">
-            <div className="bg-white rounded-lg shadow-sm border p-8">
-              <p className="text-muted-foreground text-lg">
-                No accent ratings data available for this response.
-              </p>
-            </div>
+          <div className="space-y-8">
+            <AccentRatingsChart
+              trustData={accentMetrics.trustData}
+              pleasantData={accentMetrics.pleasantData}
+              participantL1={accentMetrics.participantL1}
+              className="max-w-6xl mx-auto"
+            />
           </div>
+        ) : (
+          <Card className="max-w-2xl mx-auto border-0 shadow-lg bg-white/70 backdrop-blur-sm">
+            <CardContent className="p-12 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                <span className="text-2xl">📊</span>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">No Data Available</h3>
+              <p className="text-muted-foreground">
+                No accent ratings data is available for this response ID. Please verify the ID and try again.
+              </p>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>
