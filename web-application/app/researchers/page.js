@@ -138,9 +138,6 @@ export default function Researchers() {
                 <h3 className="text-lg font-semibold text-gray-800 leading-tight mb-2">
                   {researchPaper.title}
                 </h3>
-                <p className="text-sm text-gray-600">
-                  Research Publication
-                </p>
               </div>
             </div>
             <button
