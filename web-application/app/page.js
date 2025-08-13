@@ -120,12 +120,11 @@ export default function Home() {
   useEffect(() => {
     const getQrCodeUrl = () => {
       try {
-        const { data } = supabase.storage
-          .from('researcher-images')
-          .getPublicUrl('qrcode.png')
+        // Use local public file
+        const qrCodeUrl = '/qrcode.png'
         
-        console.log('QR Code URL:', data.publicUrl)
-        setQrCodeUrl(data.publicUrl)
+        console.log('QR Code URL:', qrCodeUrl)
+        setQrCodeUrl(qrCodeUrl)
       } catch (error) {
         console.error('Error getting QR code URL:', error)
         setQrCodeUrl(null)
