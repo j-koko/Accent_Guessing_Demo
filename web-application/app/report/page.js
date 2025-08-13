@@ -1,14 +1,17 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import LoadingSpinner from '../components/LoadingSpinner'
 import ErrorMessage from '../components/ErrorMessage'
 import AccentRatingsChart from '../components/AccentRatingsChart'
 import InfoCard from '../components/InfoCard'
 import NoDataCard from '../components/NoDataCard'
+import { Button } from '../components/ui/button'
 import { useReportData } from '../../hooks/useReportData'
 
 export default function Report() {
   const { reportData, loading, error, refetch } = useReportData()
+  const router = useRouter()
 
   if (loading) return <LoadingSpinner />
   if (error) return <ErrorMessage error={error} onRetry={refetch} />
@@ -56,6 +59,16 @@ export default function Report() {
         ) : (
           <NoDataCard />
         )}
+
+        {/* Navigation Section */}
+        <div className="mt-12 text-center">
+          <Button 
+            onClick={() => router.push('/researchers')}
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-8 py-3 text-lg shadow-lg"
+          >
+            Research Team & Paper
+          </Button>
+        </div>
       </div>
     </div>
   )

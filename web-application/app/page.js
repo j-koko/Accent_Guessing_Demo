@@ -363,7 +363,7 @@ export default function Home() {
         {/* Bottom Section - Research Team with Centered Book */}
         <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm flex-grow min-h-[400px] sm:min-h-[500px] lg:min-h-[600px] xl:h-[calc(100vh-400px)] mb-4 sm:mb-8">
           <CardHeader className="text-center pb-0">
-            <CardTitle className="text-lg sm:text-xl">Research Team & Publication</CardTitle>
+            <CardTitle className="text-lg sm:text-xl">Research Team & Paper</CardTitle>
           </CardHeader>
           <CardContent className="h-full -mt-4 sm:-mt-8">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 h-full">
