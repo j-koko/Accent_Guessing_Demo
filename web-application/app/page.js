@@ -36,6 +36,7 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(0)
   const [imageUrls, setImageUrls] = useState({})
   const [pageImages, setPageImages] = useState({})
+  const [qrCodeUrl, setQrCodeUrl] = useState(null)
 
   const fetchStats = async () => {
     try {
@@ -113,6 +114,23 @@ export default function Home() {
     getPageImages()
   }, [])
 
+  useEffect(() => {
+    const getQrCodeUrl = () => {
+      try {
+        const { data } = supabase.storage
+          .from('researcher-images')
+          .getPublicUrl('qrcode.png')
+        
+        console.log('QR Code URL:', data.publicUrl)
+        setQrCodeUrl(data.publicUrl)
+      } catch (error) {
+        console.error('Error getting QR code URL:', error)
+        setQrCodeUrl(null)
+      }
+    }
+
+    getQrCodeUrl()
+  }, [])
 
   // Auto-flip pages every 5 seconds with smooth transitions
   useEffect(() => {
@@ -393,11 +411,26 @@ export default function Home() {
               {/* Right Side - QR Code */}
               <div className="col-span-1 flex flex-col items-center justify-center -mt-16">
                 <div className="text-center">
-                  <h3 className="text-sm font-medium text-gray-700 mb-4">Linkedin & Research</h3>
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 h-28 w-28 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-300 shadow-lg hover:shadow-xl transition-shadow duration-300">
-                    <div className="text-center">
-                      <div className="text-3xl mb-2">📄</div>
-                      <p className="text-xs text-gray-600 font-medium">QR Placeholder</p>
+                  <h3 className="text-base font-medium text-gray-700 mb-6">Linkedin & Research</h3>
+                  <div className="h-40 w-40 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    {qrCodeUrl ? (
+                      <img 
+                        src={qrCodeUrl}
+                        alt="QR Code for LinkedIn and Research"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none'
+                          e.target.nextSibling.style.display = 'flex'
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-100 animate-pulse rounded-xl"></div>
+                    )}
+                    <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl hidden items-center justify-center border-2 border-dashed border-gray-300">
+                      <div className="text-center">
+                        <div className="text-3xl mb-2">📄</div>
+                        <p className="text-xs text-gray-600 font-medium">QR Loading...</p>
+                      </div>
                     </div>
                   </div>
                 </div>
