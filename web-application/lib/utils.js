@@ -1,20 +1,11 @@
-// Simple utility functions
-export function calculateFrequencies(allResponses, question) {
-  const frequencies = {}
-  let totalResponses = 0
-  
-  allResponses.forEach(response => {
-    if (response && response[question]) {
-      const answer = String(response[question]).trim()
-      if (answer) {
-        frequencies[answer] = (frequencies[answer] || 0) + 1
-        totalResponses++
-      }
-    }
-  })
-  
-  return { frequencies, totalResponses }
+import { clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs) {
+  return twMerge(clsx(inputs))
 }
+
+// Utility functions
 
 export function getResponseIdFromUrl() {
   if (typeof window === 'undefined') return null
