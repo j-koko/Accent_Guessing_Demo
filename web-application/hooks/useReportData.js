@@ -35,8 +35,8 @@ export const useReportData = () => {
         }
         
         return true
-      } else if (response.status === 404 && isPolling) {
-        // Data not found yet during polling, continue waiting
+      } else if (response.status === 202 || response.status === 404) {
+        // Data not found yet (either 202 waiting status or 404 not found), continue waiting
         return false
       } else {
         if (!isPolling) {
