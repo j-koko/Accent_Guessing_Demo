@@ -29,6 +29,7 @@ export default function Home() {
   const [stats, setStats] = useState({
     participants: 0,
     nationalities: 0,
+    languages: [],
     lastUpdated: 'Loading...'
   })
   const [isLoading, setIsLoading] = useState(true)
@@ -37,6 +38,7 @@ export default function Home() {
   const [imageUrls, setImageUrls] = useState({})
   const [pageImages, setPageImages] = useState({})
   const [qrCodeUrl, setQrCodeUrl] = useState(null)
+  const [stableLanguages, setStableLanguages] = useState(new Map()) // Track languages with stable positions
 
   const fetchStats = async () => {
     try {
@@ -48,6 +50,7 @@ export default function Home() {
       setStats({
         participants: data.participants,
         nationalities: data.nationalities,
+        languages: data.languages || [],
         lastUpdated: new Date(data.lastUpdated).toLocaleTimeString()
       })
       setError(null)
@@ -132,6 +135,67 @@ export default function Home() {
     getQrCodeUrl()
   }, [])
 
+  // Manage stable language positions to prevent animation restarts
+  useEffect(() => {
+    if (stats.languages && stats.languages.length > 0) {
+      setStableLanguages(prevStable => {
+        const newStableMap = new Map(prevStable)
+        const usedVerticalSlots = new Set()
+        
+        // First, preserve existing languages with their positions
+        stats.languages.forEach(language => {
+          const cleanLanguage = language.replace('Other: ', '')
+          if (newStableMap.has(cleanLanguage)) {
+            const existing = newStableMap.get(cleanLanguage)
+            usedVerticalSlots.add(existing.verticalSlot)
+          }
+        })
+        
+        // Then assign positions to new languages
+        let nextAvailableSlot = 0
+        stats.languages.forEach((language, globalIndex) => {
+          const cleanLanguage = language.replace('Other: ', '')
+          
+          if (!newStableMap.has(cleanLanguage)) {
+            // Find next available vertical slot
+            while (usedVerticalSlots.has(nextAvailableSlot)) {
+              nextAvailableSlot++
+            }
+            
+            // Calculate stable values for new language
+            const verticalSlot = nextAvailableSlot
+            const stableTop = 20 + (verticalSlot % 8) * 9 // 8 slots, 9% spacing: 20%, 29%, 38%, 47%, 56%, 65%, 74%, 83%
+            const stableDuration = 20 + (globalIndex % 3) * 2 // 20-26 seconds (even shorter for more simultaneous languages)
+            const stableDelay = globalIndex * 1.2 + (verticalSlot * 0.8) // Very short delays: ~1-2 seconds between starts
+            const stableSize = 0.8 + ((globalIndex % 3) * 0.1)
+            
+            newStableMap.set(cleanLanguage, {
+              verticalSlot,
+              stableTop,
+              stableDuration,
+              stableDelay,
+              stableSize,
+              startTime: Date.now() // Track when this language was added
+            })
+            
+            usedVerticalSlots.add(nextAvailableSlot)
+            nextAvailableSlot++
+          }
+        })
+        
+        // Remove languages that are no longer in the data
+        const currentLanguageNames = new Set(stats.languages.map(lang => lang.replace('Other: ', '')))
+        for (const [langName] of newStableMap) {
+          if (!currentLanguageNames.has(langName)) {
+            newStableMap.delete(langName)
+          }
+        }
+        
+        return newStableMap
+      })
+    }
+  }, [stats.languages])
+
   // Auto-flip pages every 5 seconds with smooth transitions
   useEffect(() => {
     const autoFlip = setInterval(() => {
@@ -202,14 +266,28 @@ export default function Home() {
           transform: scale(0.95);
           transition: opacity 0.4s ease-in, transform 0.4s ease-in;
         }
+        
+        .language-flow {
+          animation: flowRightToLeft linear infinite;
+          white-space: nowrap;
+        }
+        
+        @keyframes flowRightToLeft {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-100vw);
+          }
+        }
       `}</style>
-      <div className="h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-hidden">
-        <div className="container mx-auto px-6 py-4 h-full">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-x-hidden">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 min-h-screen flex flex-col">
         {/* Header */}
-        <div className="text-center mb-6">
-          <h1 className="text-4xl font-bold text-primary mb-2 tracking-tight">
+        <div className="text-center mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-4xl font-bold text-primary mb-2 tracking-tight">
             Accent Perception
-            <span className="block text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text">
+            <span className="block text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-xl sm:text-2xl lg:text-3xl xl:text-4xl">
               Research Dashboard
             </span>
           </h1>
@@ -217,44 +295,65 @@ export default function Home() {
             <span className={`w-2 h-2 rounded-full animate-pulse ${
               error ? 'bg-red-500' : isLoading ? 'bg-yellow-500' : 'bg-green-500'
             }`}></span>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               {error ? 'Stats Unavailable' : isLoading ? 'Loading...' : 'Live Statistics'}
             </p>
           </div>
         </div>
 
         {/* Top Row - Stats */}
-        <div className="grid grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8 flex-shrink-0">
           {/* Participants Card */}
           <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
             <CardHeader className="text-center pb-2">
-              <CardTitle className="text-xl text-gray-700">Survey Participants</CardTitle>
+              <CardTitle className="text-lg sm:text-xl text-gray-700">Survey Participants</CardTitle>
             </CardHeader>
             <CardContent className="text-center">
-              <div className="text-6xl font-bold text-blue-600 mb-2 font-mono">
+              <div className="text-4xl sm:text-5xl lg:text-6xl font-bold text-blue-600 mb-2 font-mono">
                 {isLoading ? '---' : stats.participants}
               </div>
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                Total Responses
-              </Badge>
               {error && (
                 <p className="text-sm text-red-500 mt-2">Real-time data unavailable</p>
               )}
             </CardContent>
           </Card>
 
-          {/* Nationalities Card */}
-          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-            <CardHeader className="text-center pb-2">
-              <CardTitle className="text-xl text-gray-700">Nationalities Represented</CardTitle>
+          {/* Languages Card */}
+          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm relative overflow-hidden">
+            {/* Language Background Flow */}
+            {stableLanguages.size > 0 && (
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                {/* Create individual flowing languages using stable positions */}
+                {Array.from(stableLanguages.entries()).map(([cleanLanguage, config]) => {
+                  return (
+                    <div
+                      key={`stable-lang-${cleanLanguage}`}
+                      className="absolute language-flow text-indigo-600 font-medium select-none whitespace-nowrap"
+                      style={{
+                        top: `${config.stableTop}%`,
+                        left: 'calc(100% + 50px)',
+                        opacity: 0.5,
+                        fontSize: `${config.stableSize}rem`,
+                        animationDuration: `${config.stableDuration}s`,
+                        animationDelay: `${config.stableDelay}s`,
+                        animationIterationCount: 'infinite'
+                      }}
+                    >
+                      {cleanLanguage}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            
+            <CardHeader className="text-center pb-2 relative z-10">
+              <CardTitle className="text-lg sm:text-xl text-gray-700">Languages Represented</CardTitle>
             </CardHeader>
-            <CardContent className="text-center">
-              <div className="text-6xl font-bold text-indigo-600 mb-2 font-mono">
+            <CardContent className="text-center relative z-10">
+              <div className="text-4xl sm:text-5xl lg:text-6xl font-bold text-indigo-600 mb-2 font-mono">
                 {isLoading ? '---' : stats.nationalities}
               </div>
-              <Badge variant="secondary" className="bg-indigo-100 text-indigo-800">
-                Languages/Countries
-              </Badge>
+
               {error && (
                 <p className="text-sm text-red-500 mt-2">Real-time data unavailable</p>
               )}
@@ -263,18 +362,18 @@ export default function Home() {
         </div>
 
         {/* Bottom Section - Research Team with Centered Book */}
-        <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm h-[calc(100vh-400px)] mb-8">
+        <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm flex-grow min-h-[400px] sm:min-h-[500px] lg:min-h-[600px] xl:h-[calc(100vh-400px)] mb-4 sm:mb-8">
           <CardHeader className="text-center pb-0">
-            <CardTitle className="text-xl">Research Team & Publication</CardTitle>
+            <CardTitle className="text-lg sm:text-xl">Research Team & Publication</CardTitle>
           </CardHeader>
-          <CardContent className="h-full -mt-8">
-            <div className="grid grid-cols-4 gap-6 h-full">
+          <CardContent className="h-full -mt-4 sm:-mt-8">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 h-full">
               
               {/* Left Side - Research Team */}
-              <div className="col-span-1 flex flex-col justify-center space-y-6 -mt-16">
+              <div className="lg:col-span-1 flex lg:flex-col justify-center lg:space-y-6 space-x-4 lg:space-x-0 lg:-mt-16 order-2 lg:order-1">
                 {researchers.map((researcher, index) => (
                   <div key={index} className="text-center space-y-3">
-                    <div className="w-20 h-20 mx-auto rounded-full overflow-hidden border-3 border-white shadow-lg bg-gray-100">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 lg:mx-auto rounded-full overflow-hidden border-3 border-white shadow-lg bg-gray-100">
                       {imageUrls[researcher.image] ? (
                         <img 
                           src={imageUrls[researcher.image]}
@@ -292,7 +391,7 @@ export default function Home() {
                         {researcher.name.split(' ').map(n => n[0]).join('')}
                       </div>
                     </div>
-                    <div className="text-sm text-gray-700 font-medium">
+                    <div className="text-xs sm:text-sm text-gray-700 font-medium">
                       {researcher.name}
                     </div>
                   </div>
@@ -301,13 +400,13 @@ export default function Home() {
 
 
               {/* Center - 3D Opening Book */}
-              <div className="col-span-2 flex items-center justify-center -mt-16">
+              <div className="lg:col-span-2 flex items-center justify-center lg:-mt-16 order-1 lg:order-2">
                 <div className="relative">
                   <div className="book-container">
                     <div className="transition-opacity duration-700 ease-in-out" key={currentPage}>
                       {bookStates[currentPage].type === 'cover' ? (
                         /* Research Paper Cover */
-                        <div className="book-cover w-96 h-[28rem] mx-auto">
+                        <div className="book-cover w-72 h-[21rem] sm:w-80 sm:h-[24rem] lg:w-96 lg:h-[28rem] mx-auto">
                           <div className="w-full h-full rounded-xl shadow-2xl bg-white border p-12 flex flex-col justify-between transform transition-all duration-500">
                             <div className="flex flex-col h-full">
                               <div className="text-center mb-8">
@@ -316,10 +415,10 @@ export default function Home() {
                               </div>
                               
                               <div className="flex-grow flex flex-col justify-center text-center px-4">
-                                <h1 className="text-2xl font-bold text-gray-800 leading-tight mb-6">
+                                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 leading-tight mb-4 sm:mb-6">
                                   Listener Perceptions of Accented Synthetic Speech
                                 </h1>
-                                <h2 className="text-lg text-gray-600 mb-8">
+                                <h2 className="text-sm sm:text-base lg:text-lg text-gray-600 mb-6 sm:mb-8">
                                   Analyzing the Impact of L1
                                 </h2>
                               </div>
@@ -409,10 +508,10 @@ export default function Home() {
               </div>
 
               {/* Right Side - QR Code */}
-              <div className="col-span-1 flex flex-col items-center justify-center -mt-16">
+              <div className="lg:col-span-1 flex flex-col items-center justify-center lg:-mt-16 order-3">
                 <div className="text-center">
-                  <h3 className="text-base font-medium text-gray-700 mb-6">Linkedin & Research</h3>
-                  <div className="h-40 w-40 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+                  <h3 className="text-sm sm:text-base font-medium text-gray-700 mb-4 sm:mb-6">Linkedin & Research</h3>
+                  <div className="h-32 w-32 sm:h-36 sm:w-36 lg:h-40 lg:w-40 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
                     {qrCodeUrl ? (
                       <img 
                         src={qrCodeUrl}
@@ -441,7 +540,7 @@ export default function Home() {
         </Card>
 
         {/* Footer */}
-        <div className="text-center mt-4">
+        <div className="text-center mt-2 sm:mt-4 flex-shrink-0">
           <p className="text-xs text-muted-foreground">
             Last updated: {stats.lastUpdated}
           </p>

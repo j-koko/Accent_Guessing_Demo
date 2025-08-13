@@ -30,28 +30,53 @@ export async function GET() {
       return NextResponse.json({ error: 'Database error' }, { status: 500 })
     }
 
-    // Query unique nationalities/languages
-    // Using q1_language as proxy for nationality since that's what we have
-    const { data: nationalityData, error: nationalityError } = await supabase
+    // Query language data (q1_language and q1_text for "other" cases)
+    const { data: languageData, error: languageError } = await supabase
       .from('responses')
-      .select('q1_language')
+      .select('q1_language, q1_text')
       .not('q1_language', 'is', null)
 
-    if (nationalityError) {
-      console.error('Error fetching nationality data:', nationalityError)
+    if (languageError) {
+      console.error('Error fetching language data:', languageError)
       return NextResponse.json({ error: 'Database error' }, { status: 500 })
     }
 
-    // Count unique languages/nationalities
-    const uniqueNationalities = new Set(
-      nationalityData
-        .map(row => row.q1_language?.trim()?.toLowerCase())
-        .filter(lang => lang && lang !== '' && lang !== 'other')
-    )
+    // Extract languages using same logic as Python code
+    const languageList = languageData.map(row => {
+      let language = String(row.q1_language || '').trim()
+      
+      // If language starts with "other", use the q1_text field (like in Python)
+      if (language.toLowerCase().startsWith('other')) {
+        const otherText = String(row.q1_text || '').trim()
+        // Don't include if it's empty or "unspecified"
+        if (!otherText || otherText.toLowerCase() === 'unspecified') {
+          return null
+        }
+        language = `Other: ${otherText}`
+      }
+      
+      return language
+    }).filter(lang => lang && lang !== '' && lang !== 'null')
+
+    // Normalize languages for uniqueness (case-insensitive)
+    // Create a map to preserve the original case of the first occurrence
+    const languageMap = new Map()
+    
+    languageList.forEach(lang => {
+      const normalizedKey = lang.toLowerCase()
+      if (!languageMap.has(normalizedKey)) {
+        languageMap.set(normalizedKey, lang)
+      }
+    })
+
+    // Get unique languages preserving original case
+    const uniqueLanguages = Array.from(languageMap.values())
+    const sortedLanguages = uniqueLanguages.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
 
     const stats = {
       participants: participantCount || 0,
-      nationalities: uniqueNationalities.size,
+      nationalities: sortedLanguages.length,
+      languages: sortedLanguages,
       lastUpdated: new Date().toISOString()
     }
 
