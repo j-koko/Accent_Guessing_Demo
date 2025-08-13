@@ -1,20 +1,28 @@
 'use client'
 
+import { createClient } from '@supabase/supabase-js'
+import { useState, useEffect } from 'react'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+)
+
 const researchers = [
   {
     name: "Igor Marchenko",
     url: "https://www.linkedin.com/in/marczenko",
-    image: "/igor.webp"
+    image: "igor.webp"
   },
   {
     name: "Jan Kokowski", 
     url: "https://www.linkedin.com/in/jan-kokowski-a21293110/",
-    image: "/jan.webp"
+    image: "jan.webp"
   },
   {
     name: "Stella S.",
     url: "https://www.linkedin.com/in/stellasiu0427/",
-    image: "/stella.webp"
+    image: "stella.webp"
   }
 ]
 
@@ -24,6 +32,31 @@ const researchPaper = {
 }
 
 export default function Researchers() {
+  const [imageUrls, setImageUrls] = useState({})
+
+  useEffect(() => {
+    const getImageUrls = async () => {
+      const urls = {}
+      
+      for (const researcher of researchers) {
+        try {
+          const { data } = supabase.storage
+            .from('researcher-images')
+            .getPublicUrl(researcher.image)
+          
+          urls[researcher.image] = data.publicUrl
+        } catch (error) {
+          console.error(`Error getting URL for ${researcher.image}:`, error)
+          urls[researcher.image] = null
+        }
+      }
+      
+      setImageUrls(urls)
+    }
+
+    getImageUrls()
+  }, [])
+
   const openLink = (url) => {
     window.open(url, '_blank')
   }
@@ -56,15 +89,19 @@ export default function Researchers() {
               <div className="flex items-center gap-4">
                 {/* Profile Image */}
                 <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
-                  <img 
-                    src={researcher.image}
-                    alt={researcher.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.style.display = 'none'
-                      e.target.nextSibling.style.display = 'flex'
-                    }}
-                  />
+                  {imageUrls[researcher.image] ? (
+                    <img 
+                      src={imageUrls[researcher.image]}
+                      alt={researcher.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = 'none'
+                        e.target.nextSibling.style.display = 'flex'
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 animate-pulse rounded-full"></div>
+                  )}
                   <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full hidden items-center justify-center text-white text-lg font-bold">
                     {researcher.name.split(' ').map(n => n[0]).join('')}
                   </div>
