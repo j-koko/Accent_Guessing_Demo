@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card'
 import { Badge } from './components/ui/badge'
 import { createClient } from '@supabase/supabase-js'
+import { CONFIG } from '../lib/config'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -42,7 +43,7 @@ export default function Home() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/stats')
+      const response = await fetch(CONFIG.API.STATS)
       if (!response.ok) {
         throw new Error('Failed to fetch statistics')
       }
@@ -64,7 +65,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchStats()
-    const interval = setInterval(fetchStats, 30000)
+    const interval = setInterval(fetchStats, CONFIG.REFRESH_INTERVALS.STATS_DASHBOARD)
     return () => clearInterval(interval)
   }, [])
 
@@ -199,7 +200,7 @@ export default function Home() {
   useEffect(() => {
     const autoFlip = setInterval(() => {
       setCurrentPage(prev => (prev + 1) % 6) // 6 states: cover, spread1, spread2, spread3, spread4, cover
-    }, 5000)
+    }, CONFIG.REFRESH_INTERVALS.PAGE_FLIP)
 
     return () => clearInterval(autoFlip)
   }, [])
