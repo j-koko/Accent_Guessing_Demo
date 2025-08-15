@@ -61,9 +61,9 @@ export const useReportData = () => {
         return
       }
       
-      // Check if we should show error after 10 seconds
+      // Check if we should show error after 15 seconds
       const elapsed = Date.now() - startTimeRef.current
-      if (elapsed >= 10000) {
+      if (elapsed >= 15000) {
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current)
           pollingIntervalRef.current = null
