@@ -22,7 +22,10 @@ export async function POST(request) {
       })
     }
 
-    if (typeof score !== 'number' || score < 0) {
+    // Convert score to number if it's a string
+    const numericScore = typeof score === 'string' ? parseFloat(score) : score
+
+    if (typeof numericScore !== 'number' || isNaN(numericScore) || numericScore < 0) {
       return NextResponse.json({ error: 'Score must be a non-negative number' }, { 
         status: 400,
         headers: {
@@ -35,7 +38,7 @@ export async function POST(request) {
 
     const insertData = {
       name: name.trim(),
-      score: parseInt(score)
+      score: parseInt(numericScore)
     }
 
     const { error } = await supabase

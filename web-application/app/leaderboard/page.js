@@ -25,6 +25,10 @@ export default function Leaderboard() {
       if (showLoading) {
         setIsRefreshing(true)
       }
+      
+      // Add 5 second delay
+      await new Promise(resolve => setTimeout(resolve, 5000))
+      
       const response = await fetch(`${CONFIG.API.GUESSING_GAME}?orderBy=score&order=desc&limit=1000`)
       if (!response.ok) {
         throw new Error('Failed to fetch leaderboard data')
