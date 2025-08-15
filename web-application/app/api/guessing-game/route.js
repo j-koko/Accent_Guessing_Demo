@@ -41,37 +41,24 @@ export async function POST(request) {
       score: parseInt(numericScore)
     }
 
-    // Check for duplicate submissions within the last 10 seconds
-    const thirtySecondsAgo = new Date(Date.now() - 10 * 1000).toISOString()
-    
-    const { data: existingRecords, error: checkError } = await supabase
-      .from('guessing_game')
-      .select('id, created_at')
-      .eq('name', insertData.name)
-      .eq('score', insertData.score)
-      .gte('created_at', thirtySecondsAgo)
-      .limit(1)
-
-    if (checkError) {
-      console.error('Error checking for duplicates:', checkError)
-      // Continue with insertion if check fails
-    } else if (existingRecords && existingRecords.length > 0) {
-      // Duplicate found within 30 seconds, return success without inserting
-      console.log(`Duplicate submission blocked for ${insertData.name} with score ${insertData.score}`)
-      return NextResponse.json({ status: 'ok', message: 'duplicate_prevented' }, {
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': 'Content-Type',
-          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
-        }
-      })
-    }
-
     const { error } = await supabase
       .from('guessing_game')
       .insert([insertData])
 
     if (error) {
+      // Check if it's a unique constraint violation (duplicate)
+      if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
+        console.log(`Duplicate submission prevented for ${insertData.name} with score ${insertData.score}`)
+        // Return success for duplicates to avoid confusing the user
+        return NextResponse.json({ status: 'ok', message: 'duplicate_prevented' }, {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+          }
+        })
+      }
+      
       console.error('Database error:', error)
       return NextResponse.json({ error: 'Database error' }, { 
         status: 500,
