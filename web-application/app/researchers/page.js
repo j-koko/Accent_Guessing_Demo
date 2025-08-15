@@ -71,8 +71,69 @@ export default function Researchers() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-8 px-4">
       <div className="max-w-lg mx-auto">
         
-        {/* Header */}
-        <div className="text-center mb-12">
+        {/* Survey Link */}
+        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 mb-4 sm:mb-6">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-800 leading-tight mb-1 sm:mb-2">
+                  Survey - Exploring Voice Preferences
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                  Compare your responses to others with real-time analytics
+                </p>
+              </div>
+              <div className="ml-3 flex-shrink-0">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-emerald-100 to-green-100 rounded-lg flex items-center justify-center">
+                  <svg width="16" height="16" className="sm:w-5 sm:h-5 text-emerald-600" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M9,17H7V10H9V17M13,17H11V7H13V17M17,17H15V13H17V17M19.5,19.1H4.5V5H19.5V19.1M19.5,3H4.5C3.4,3 2.5,3.9 2.5,5V19.1C2.5,20.2 3.4,21.1 4.5,21.1H19.5C20.6,21.1 21.5,20.2 21.5,19.1V5C21.5,3.9 20.6,3 19.5,3Z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => openLink('https://rug.eu.qualtrics.com/jfe/form/SV_byzC8IQg39x9tjg')}
+              className="w-full bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white py-2.5 sm:py-3 px-4 rounded-lg font-medium text-sm sm:text-base transition-all duration-200 shadow-md hover:shadow-lg active:scale-[0.98] flex items-center justify-center gap-2"
+            >
+              <span>Take Survey</span>
+              <svg width="16" height="16" className="sm:w-4 sm:h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Accented Voice Guessing Game */}
+        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 mb-6 sm:mb-8">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-800 leading-tight mb-1 sm:mb-2">
+                  Accented Voice Guessing Game
+                </h3>
+              </div>
+              <div className="ml-3 flex-shrink-0">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center">
+                  <svg width="16" height="16" className="sm:w-5 sm:h-5 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M14.5,9A1.5,1.5 0 0,0 13,10.5V12.5A1.5,1.5 0 0,0 14.5,14A1.5,1.5 0 0,0 16,12.5V10.5A1.5,1.5 0 0,0 14.5,9M16,4A2,2 0 0,1 18,6V18A2,2 0 0,1 16,20H8A2,2 0 0,1 6,18V6A2,2 0 0,1 8,4H16M14.5,5.5A3.5,3.5 0 0,0 11,9V14A3.5,3.5 0 0,0 14.5,17.5A3.5,3.5 0 0,0 18,14V9A3.5,3.5 0 0,0 14.5,5.5Z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => openLink('#')}
+              className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white py-2.5 sm:py-3 px-4 rounded-lg font-medium text-sm sm:text-base transition-all duration-200 shadow-md hover:shadow-lg active:scale-[0.98] flex items-center justify-center gap-2"
+            >
+              <span>Play Game</span>
+              <svg width="16" height="16" className="sm:w-4 sm:h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8,5.14V19.14L19,12.14L8,5.14Z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Research Team Header */}
+        <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-3">
             Research Team
           </h1>
