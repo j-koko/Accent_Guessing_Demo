@@ -16,6 +16,7 @@ export default function Leaderboard() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPlayers, setTotalPlayers] = useState(0)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isInitialLoading, setIsInitialLoading] = useState(true)
   const router = useRouter()
 
   const ITEMS_PER_PAGE = 10
@@ -37,7 +38,6 @@ export default function Leaderboard() {
       
       // Handle both old and new API formats
       const data = result.data || result || []
-      const total = result.total || data.length
       const globalStats = result.globalStats
       
       // Ensure data is always an array
@@ -79,6 +79,7 @@ export default function Leaderboard() {
       if (showLoading) {
         setIsRefreshing(false)
       }
+      setIsInitialLoading(false)
     }
   }
 
@@ -151,6 +152,21 @@ export default function Leaderboard() {
   }
 
   if (error) return <ErrorMessage error={error} onRetry={fetchAllLeaderboard} />
+
+  // Show loading screen during initial load
+  if (isInitialLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full mb-6 shadow-lg">
+            <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Loading Leaderboard...</h2>
+          <p className="text-gray-600">Please wait while we fetch the latest results</p>
+        </div>
+      </div>
+    )
+  }
 
   // Get current page data
   const maxPage = Math.max(1, Math.ceil(totalPlayers / ITEMS_PER_PAGE))
