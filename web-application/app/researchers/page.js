@@ -80,7 +80,7 @@ export default function Researchers() {
                   Survey - Exploring Voice Preferences
                 </h3>
                 <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                  Compare your responses to others with real-time analytics
+                  Compare your responses to others at the end of the survey
                 </p>
               </div>
               <div className="ml-3 flex-shrink-0">

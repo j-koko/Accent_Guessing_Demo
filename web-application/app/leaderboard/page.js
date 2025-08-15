@@ -3,57 +3,63 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
-import LoadingSpinner from '../components/LoadingSpinner'
 import ErrorMessage from '../components/ErrorMessage'
 import { Button } from '../components/ui/button'
 import { useRouter } from 'next/navigation'
 import { CONFIG } from '../../lib/config'
 
 export default function Leaderboard() {
-  const [leaderboardData, setLeaderboardData] = useState([])
+  const [allLeaderboardData, setAllLeaderboardData] = useState([])
   const [stats, setStats] = useState({ totalPlayers: 0, averageScore: 0, highestScore: 0 })
-  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [lastUpdated, setLastUpdated] = useState('Loading...')
+  const [lastUpdated, setLastUpdated] = useState(new Date().toLocaleTimeString())
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPlayers, setTotalPlayers] = useState(0)
-  const [hasMore, setHasMore] = useState(true)
   const router = useRouter()
 
   const ITEMS_PER_PAGE = 10
 
-  const fetchLeaderboard = async (page = 1) => {
+  const fetchAllLeaderboard = async () => {
     try {
-      setIsLoading(true)
-      
-      const offset = (page - 1) * ITEMS_PER_PAGE
-      const response = await fetch(`${CONFIG.API.GUESSING_GAME}?limit=${ITEMS_PER_PAGE}&offset=${offset}&orderBy=score&order=desc`)
+      const response = await fetch(`${CONFIG.API.GUESSING_GAME}?orderBy=score&order=desc&limit=1000`)
       if (!response.ok) {
         throw new Error('Failed to fetch leaderboard data')
       }
       const result = await response.json()
       
       // Handle both old and new API formats
-      const data = result.data || result
+      const data = result.data || result || []
       const total = result.total || data.length
       const globalStats = result.globalStats
       
-      setLeaderboardData(data)
-      setTotalPlayers(total)
-      setHasMore((page * ITEMS_PER_PAGE) < total)
+      // Ensure data is always an array
+      const validData = Array.isArray(data) ? data : []
       
-      // Use global stats from API if available, otherwise calculate from current page (fallback)
-      if (globalStats) {
+      setAllLeaderboardData(validData)
+      setTotalPlayers(validData.length)
+      
+      // Use global stats from API if available, otherwise calculate from all data
+      if (globalStats && typeof globalStats.averageScore === 'number') {
         setStats({ 
-          totalPlayers: total, 
-          averageScore: globalStats.averageScore, 
-          highestScore: globalStats.highestScore 
+          totalPlayers: validData.length, 
+          averageScore: Math.round(globalStats.averageScore), 
+          highestScore: globalStats.highestScore || 0 
         })
-      } else if (data.length > 0) {
-        // Fallback for old API format
-        const averageScore = Math.round(data.reduce((sum, player) => sum + player.score, 0) / data.length)
-        const highestScore = Math.max(...data.map(player => player.score))
-        setStats({ totalPlayers: total, averageScore, highestScore })
+      } else if (validData.length > 0) {
+        // Calculate from all data - defensive against invalid scores
+        const validScores = validData
+          .map(player => player.score)
+          .filter(score => typeof score === 'number' && !isNaN(score))
+        
+        if (validScores.length > 0) {
+          const averageScore = Math.round(validScores.reduce((sum, score) => sum + score, 0) / validScores.length)
+          const highestScore = Math.max(...validScores)
+          setStats({ totalPlayers: validData.length, averageScore, highestScore })
+        } else {
+          setStats({ totalPlayers: validData.length, averageScore: 0, highestScore: 0 })
+        }
+      } else {
+        setStats({ totalPlayers: 0, averageScore: 0, highestScore: 0 })
       }
       
       setLastUpdated(new Date().toLocaleTimeString())
@@ -61,49 +67,52 @@ export default function Leaderboard() {
     } catch (err) {
       console.error('Error fetching leaderboard:', err)
       setError('Unable to load leaderboard data')
-    } finally {
-      setIsLoading(false)
     }
   }
 
   const goToNextPage = () => {
-    if (hasMore) {
-      const nextPage = currentPage + 1
-      setCurrentPage(nextPage)
-      fetchLeaderboard(nextPage)
+    const maxPage = Math.ceil(totalPlayers / ITEMS_PER_PAGE)
+    if (currentPage < maxPage) {
+      setCurrentPage(currentPage + 1)
     }
   }
 
   const goToPrevPage = () => {
     if (currentPage > 1) {
-      const prevPage = currentPage - 1
-      setCurrentPage(prevPage)
-      fetchLeaderboard(prevPage)
+      setCurrentPage(currentPage - 1)
     }
   }
 
   const refreshLeaderboard = () => {
     setCurrentPage(1)
-    fetchLeaderboard(1)
+    fetchAllLeaderboard()
   }
 
   useEffect(() => {
-    fetchLeaderboard()
-    const interval = setInterval(fetchLeaderboard, CONFIG.REFRESH_INTERVALS.LEADERBOARD)
+    fetchAllLeaderboard()
+    const interval = setInterval(fetchAllLeaderboard, CONFIG.REFRESH_INTERVALS.LEADERBOARD)
     return () => clearInterval(interval)
   }, [])
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+    try {
+      if (!dateString) return 'Unknown date'
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return 'Invalid date'
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    } catch (error) {
+      console.error('Date formatting error:', error)
+      return 'Invalid date'
+    }
   }
 
-  const getRankIcon = (index) => {
-    const globalRank = (currentPage - 1) * ITEMS_PER_PAGE + index + 1
+  const getRankIcon = (index, pageNum = safePage) => {
+    const globalRank = (pageNum - 1) * ITEMS_PER_PAGE + index + 1
     switch (globalRank) {
       case 1: return '🥇'
       case 2: return '🥈'
@@ -113,23 +122,38 @@ export default function Leaderboard() {
   }
 
   const getScoreColor = (score) => {
-    if (score >= 95) return 'text-emerald-700 bg-emerald-100 border-emerald-200'
-    if (score >= 85) return 'text-blue-700 bg-blue-100 border-blue-200'
-    if (score >= 75) return 'text-purple-700 bg-purple-100 border-purple-200'
-    if (score >= 65) return 'text-amber-700 bg-amber-100 border-amber-200'
+    const validScore = typeof score === 'number' ? score : 0
+    if (validScore >= 95) return 'text-emerald-700 bg-emerald-100 border-emerald-200'
+    if (validScore >= 85) return 'text-blue-700 bg-blue-100 border-blue-200'
+    if (validScore >= 75) return 'text-purple-700 bg-purple-100 border-purple-200'
+    if (validScore >= 65) return 'text-amber-700 bg-amber-100 border-amber-200'
     return 'text-slate-700 bg-slate-100 border-slate-200'
   }
 
-  const getCardColor = (index) => {
-    const globalRank = (currentPage - 1) * ITEMS_PER_PAGE + index + 1
+  const getCardColor = (index, pageNum = safePage) => {
+    const globalRank = (pageNum - 1) * ITEMS_PER_PAGE + index + 1
     if (globalRank === 1) return 'bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-yellow-400 shadow-xl'
     if (globalRank === 2) return 'bg-gradient-to-r from-slate-50 to-gray-50 border-l-4 border-gray-400 shadow-lg'
     if (globalRank === 3) return 'bg-gradient-to-r from-orange-50 to-amber-50 border-l-4 border-orange-400 shadow-lg'
     return 'bg-white/80 border-l-4 border-blue-200 shadow-md hover:shadow-lg'
   }
 
-  if (isLoading) return <LoadingSpinner />
-  if (error) return <ErrorMessage error={error} onRetry={fetchLeaderboard} />
+  if (error) return <ErrorMessage error={error} onRetry={fetchAllLeaderboard} />
+
+  // Get current page data
+  const maxPage = Math.max(1, Math.ceil(totalPlayers / ITEMS_PER_PAGE))
+  const safePage = Math.min(currentPage, maxPage)
+  
+  // Reset to page 1 if current page is invalid
+  if (currentPage > maxPage && totalPlayers > 0) {
+    setCurrentPage(1)
+  }
+  
+  const startIndex = (safePage - 1) * ITEMS_PER_PAGE
+  const endIndex = startIndex + ITEMS_PER_PAGE
+  const currentPageData = allLeaderboardData.slice(startIndex, endIndex)
+  const hasMore = endIndex < totalPlayers
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
@@ -146,10 +170,10 @@ export default function Leaderboard() {
           </h1>
           <div className="flex items-center justify-center gap-2">
             <span className={`w-3 h-3 rounded-full ${
-              error ? 'bg-red-500' : isLoading ? 'bg-yellow-500 animate-pulse' : 'bg-green-500 animate-pulse'
+              error ? 'bg-red-500' : 'bg-green-500 animate-pulse'
             }`}></span>
             <p className="text-sm text-muted-foreground font-medium">
-              {error ? '❌ Data Unavailable' : isLoading ? '⏳ Loading...' : 'Live Leaderboard'}
+              {error ? '❌ Data Unavailable' : 'Live Leaderboard'}
             </p>
           </div>
         </div>
@@ -196,24 +220,14 @@ export default function Leaderboard() {
               </CardTitle>
               <button
                 onClick={refreshLeaderboard}
-                disabled={isLoading}
-                className="flex items-center gap-2 px-3 md:px-4 py-2 rounded-md bg-white/10 hover:bg-white/20 border border-white/30 hover:border-white/50 transition-all text-white text-sm md:text-base disabled:opacity-50"
+                className="flex items-center gap-2 px-3 md:px-4 py-2 rounded-md bg-white/10 hover:bg-white/20 border border-white/30 hover:border-white/50 transition-all text-white text-sm md:text-base"
               >
-                {isLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Refreshing</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Refresh</span>
-                  </>
-                )}
+                <span>Refresh</span>
               </button>
             </div>
           </CardHeader>
           <CardContent className="p-6">
-            {leaderboardData.length === 0 ? (
+            {allLeaderboardData.length === 0 ? (
               <div className="text-center py-12">
                 <div className="text-8xl mb-6 animate-bounce">🎯</div>
                 <h3 className="text-2xl font-bold text-gray-700 mb-4">Ready to Play?</h3>
@@ -221,30 +235,30 @@ export default function Leaderboard() {
               </div>
             ) : (
               <div className="space-y-4">
-                {leaderboardData.map((player, index) => (
+                {currentPageData.map((player, index) => (
                   <div
-                    key={player.id}
+                    key={player.id || index}
                     className={`flex items-center justify-between p-3 md:p-6 rounded-xl border transition-all duration-300 hover:scale-[1.02] ${getCardColor(index)}`}
                   >
                     <div className="flex items-center space-x-3 md:space-x-6">
-                      <div className={`font-bold min-w-[2rem] md:min-w-[4rem] text-center ${((currentPage - 1) * ITEMS_PER_PAGE + index + 1) <= 3 ? 'text-2xl md:text-4xl lg:text-5xl' : 'text-lg md:text-2xl lg:text-3xl'}`}>
+                      <div className={`font-bold min-w-[2rem] md:min-w-[4rem] text-center ${((safePage - 1) * ITEMS_PER_PAGE + index + 1) <= 3 ? 'text-2xl md:text-4xl lg:text-5xl' : 'text-lg md:text-2xl lg:text-3xl'}`}>
                         {getRankIcon(index)}
                       </div>
                       <div>
                         <div className="font-bold text-gray-800 text-base md:text-xl mb-1">
-                          {player.name}
+                          {player.name || 'Anonymous'}
                         </div>
                         <div className="text-xs md:text-sm text-gray-500 flex items-center gap-2">
-                          {formatDate(player.created_at)}
+                          {player.created_at ? formatDate(player.created_at) : 'Unknown date'}
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
                       <Badge 
                         variant="outline" 
-                        className={`text-sm md:text-xl font-bold px-2 md:px-4 py-1 md:py-2 ${getScoreColor(player.score)}`}
+                        className={`text-sm md:text-xl font-bold px-2 md:px-4 py-1 md:py-2 ${getScoreColor(player.score || 0)}`}
                       >
-                        {player.score}
+                        {typeof player.score === 'number' ? player.score : 0}
                       </Badge>
                     </div>
                   </div>
@@ -253,11 +267,11 @@ export default function Leaderboard() {
             )}
             
             {/* Pagination */}
-            {totalPlayers > ITEMS_PER_PAGE && (
+            {(totalPlayers > ITEMS_PER_PAGE || allLeaderboardData.length > ITEMS_PER_PAGE) && (
               <div className="flex justify-between items-center mt-6 pt-6 border-t">
                 <Button 
                   onClick={goToPrevPage}
-                  disabled={currentPage === 1}
+                  disabled={safePage === 1}
                   variant="outline"
                   className="px-3 md:px-4 py-2 text-sm md:text-base"
                 >
@@ -265,7 +279,7 @@ export default function Leaderboard() {
                 </Button>
                 
                 <div className="flex items-center gap-2 text-sm md:text-base text-gray-600">
-                  <span>Page {currentPage} of {Math.ceil(totalPlayers / ITEMS_PER_PAGE)}</span>
+                  <span>Page {safePage} of {maxPage}</span>
                 </div>
                 
                 <Button 
