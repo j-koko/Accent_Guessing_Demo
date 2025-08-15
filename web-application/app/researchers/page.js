@@ -88,7 +88,7 @@ export default function Researchers() {
             >
               <div className="flex items-center gap-4">
                 {/* Profile Image */}
-                <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
                   {imageUrls[researcher.image] ? (
                     <img 
                       src={imageUrls[researcher.image]}

@@ -180,7 +180,7 @@ export default function Leaderboard() {
                     className={`flex items-center justify-between p-6 rounded-xl border transition-all duration-300 hover:scale-[1.02] ${getCardColor(index)}`}
                   >
                     <div className="flex items-center space-x-6">
-                      <div className="text-4xl font-bold min-w-[4rem] text-center">
+                      <div className={`font-bold min-w-[4rem] text-center ${index < 3 ? 'text-5xl' : 'text-3xl'}`}>
                         {getRankIcon(index)}
                       </div>
                       <div>

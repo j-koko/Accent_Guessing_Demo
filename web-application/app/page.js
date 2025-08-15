@@ -40,6 +40,8 @@ export default function Home() {
   const [pageImages, setPageImages] = useState({})
   const [qrCodeUrl, setQrCodeUrl] = useState(null)
   const [stableLanguages, setStableLanguages] = useState(new Map()) // Track languages with stable positions
+  const [leaderboardData, setLeaderboardData] = useState([])
+  const [leaderboardError, setLeaderboardError] = useState(null)
 
   const fetchStats = async () => {
     try {
@@ -63,10 +65,30 @@ export default function Home() {
     }
   }
 
+  const fetchLeaderboard = async () => {
+    try {
+      const response = await fetch(`${CONFIG.API.GUESSING_GAME}?limit=10&orderBy=score&order=desc`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch leaderboard data')
+      }
+      const data = await response.json()
+      setLeaderboardData(data)
+      setLeaderboardError(null)
+    } catch (err) {
+      console.error('Error fetching leaderboard:', err)
+      setLeaderboardError('Unable to load leaderboard data')
+    }
+  }
+
   useEffect(() => {
     fetchStats()
-    const interval = setInterval(fetchStats, CONFIG.REFRESH_INTERVALS.STATS_DASHBOARD)
-    return () => clearInterval(interval)
+    fetchLeaderboard()
+    const statsInterval = setInterval(fetchStats, CONFIG.REFRESH_INTERVALS.STATS_DASHBOARD)
+    const leaderboardInterval = setInterval(fetchLeaderboard, CONFIG.REFRESH_INTERVALS.LEADERBOARD)
+    return () => {
+      clearInterval(statsInterval)
+      clearInterval(leaderboardInterval)
+    }
   }, [])
 
   useEffect(() => {
@@ -205,6 +227,24 @@ export default function Home() {
     return () => clearInterval(autoFlip)
   }, [])
 
+  // Helper functions for leaderboard
+  const getRankIcon = (index) => {
+    switch (index) {
+      case 0: return '🥇'
+      case 1: return '🥈'
+      case 2: return '🥉'
+      default: return `#${index + 1}`
+    }
+  }
+
+  const getScoreColor = (score) => {
+    if (score >= 95) return 'text-emerald-700 bg-emerald-100 border-emerald-200'
+    if (score >= 85) return 'text-blue-700 bg-blue-100 border-blue-200'
+    if (score >= 75) return 'text-purple-700 bg-purple-100 border-purple-200'
+    if (score >= 65) return 'text-amber-700 bg-amber-100 border-amber-200'
+    return 'text-slate-700 bg-slate-100 border-slate-200'
+  }
+
   const bookStates = [
     { type: 'cover', isOpen: false },
     { type: 'spread', leftPage: 1, rightPage: 2, isOpen: true },
@@ -220,6 +260,8 @@ export default function Home() {
         .book-container {
           perspective: 1500px;
           perspective-origin: center center;
+          min-width: 320px;
+          min-height: 208px;
         }
         
         .book-cover {
@@ -301,242 +343,277 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Top Row - Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8 flex-shrink-0">
-          {/* Participants Card */}
-          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-            <CardHeader className="text-center pb-2">
-              <CardTitle className="text-lg sm:text-xl text-gray-700">Survey Participants</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <div className="text-4xl sm:text-5xl lg:text-6xl font-bold text-blue-600 mb-2 font-mono">
-                {isLoading ? '---' : stats.participants}
-              </div>
-              {error && (
-                <p className="text-sm text-red-500 mt-2">Real-time data unavailable</p>
-              )}
-            </CardContent>
-          </Card>
+        {/* Main Grid Layout */}
+        <div className="grid grid-cols-12 gap-4 sm:gap-6 flex-grow">
+          {/* Left Side - Stats and Research Section */}
+          <div className="col-span-12 lg:col-span-9 flex flex-col space-y-4">
+            {/* Top Row - Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Participants Card */}
+              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                <CardHeader className="text-center pb-2">
+                  <CardTitle className="text-sm sm:text-base text-gray-700">Survey Participants</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-600 mb-1 font-mono">
+                    {isLoading ? '---' : stats.participants}
+                  </div>
+                  {error && (
+                    <p className="text-xs text-red-500 mt-1">Real-time data unavailable</p>
+                  )}
+                </CardContent>
+              </Card>
 
-          {/* Languages Card */}
-          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm relative overflow-hidden">
-            {/* Language Background Flow */}
-            {stableLanguages.size > 0 && (
-              <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {/* Create individual flowing languages using stable positions */}
-                {Array.from(stableLanguages.entries()).map(([cleanLanguage, config]) => {
-                  return (
-                    <div
-                      key={`stable-lang-${cleanLanguage}`}
-                      className="absolute language-flow text-indigo-600 font-medium select-none whitespace-nowrap"
-                      style={{
-                        top: `${config.stableTop}%`,
-                        left: 'calc(100% + 50px)',
-                        opacity: 0.5,
-                        fontSize: `${config.stableSize}rem`,
-                        animationDuration: `${config.stableDuration}s`,
-                        animationDelay: `${config.stableDelay}s`,
-                        animationIterationCount: 'infinite'
-                      }}
-                    >
-                      {cleanLanguage}
+              {/* Languages Card */}
+              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm relative overflow-hidden">
+                {/* Language Background Flow */}
+                {stableLanguages.size > 0 && (
+                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    {Array.from(stableLanguages.entries()).map(([cleanLanguage, config]) => {
+                      return (
+                        <div
+                          key={`stable-lang-${cleanLanguage}`}
+                          className="absolute language-flow text-indigo-600 font-medium select-none whitespace-nowrap"
+                          style={{
+                            top: `${config.stableTop}%`,
+                            left: 'calc(100% + 50px)',
+                            opacity: 0.3,
+                            fontSize: `${config.stableSize * 0.8}rem`,
+                            animationDuration: `${config.stableDuration}s`,
+                            animationDelay: `${config.stableDelay}s`,
+                            animationIterationCount: 'infinite'
+                          }}
+                        >
+                          {cleanLanguage}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                
+                <CardHeader className="text-center pb-2 relative z-10">
+                  <CardTitle className="text-sm sm:text-base text-gray-700">Languages Represented</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center relative z-10">
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-indigo-600 mb-1 font-mono">
+                    {isLoading ? '---' : stats.nationalities}
+                  </div>
+                  {error && (
+                    <p className="text-xs text-red-500 mt-1">Real-time data unavailable</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Research Section */}
+            <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm flex-grow">
+              <CardHeader className="text-center pb-2">
+                <CardTitle className="text-base sm:text-lg lg:text-xl text-gray-700 font-semibold">Research Team & Paper</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center space-y-6 h-full">
+                {/* Research Team Avatars */}
+                <div className="flex justify-center space-x-4 sm:space-x-6">
+                  {researchers.map((researcher, index) => (
+                    <div key={index} className="text-center">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full overflow-hidden border-2 border-white shadow-lg bg-gray-100 mx-auto mb-2">
+                        {imageUrls[researcher.image] ? (
+                          <img 
+                            src={imageUrls[researcher.image]}
+                            alt={researcher.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.style.display = 'none'
+                              e.target.nextSibling.style.display = 'flex'
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-200 animate-pulse rounded-full"></div>
+                        )}
+                        <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full hidden items-center justify-center text-white text-sm font-bold">
+                          {researcher.name.split(' ').map(n => n[0]).join('')}
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-700 font-medium">
+                        {researcher.name}
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-            
-            <CardHeader className="text-center pb-2 relative z-10">
-              <CardTitle className="text-lg sm:text-xl text-gray-700">Languages Represented</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center relative z-10">
-              <div className="text-4xl sm:text-5xl lg:text-6xl font-bold text-indigo-600 mb-2 font-mono">
-                {isLoading ? '---' : stats.nationalities}
-              </div>
+                  ))}
+                </div>
 
-              {error && (
-                <p className="text-sm text-red-500 mt-2">Real-time data unavailable</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                {/* Paper Animation and QR Code Side by Side */}
+                <div className="flex-grow flex items-center justify-center space-x-12 lg:space-x-16">
+                  {/* Paper Animation - Larger */}
+                  <div className="book-container flex-shrink-0 w-80 h-52 sm:w-96 sm:h-60 lg:w-[576px] lg:h-96 flex items-center justify-center">
+                    <div className="transition-opacity duration-700 ease-in-out" key={currentPage}>
+                      {bookStates[currentPage].type === 'cover' ? (
+                        <div className="book-cover w-40 h-52 sm:w-48 sm:h-60 lg:w-64 lg:h-96 mx-auto">
+                          <div className="w-full h-full rounded-md sm:rounded-lg shadow-xl bg-white border p-3 sm:p-4 lg:p-8 flex flex-col justify-between">
+                            <div className="flex flex-col h-full">
+                              <div className="text-center mb-3">
+                                <div className="text-[8px] sm:text-xs lg:text-sm uppercase tracking-widest text-gray-500 mb-2 lg:mb-4">Research Paper</div>
+                                <div className="border-t border-gray-300 w-8 sm:w-12 lg:w-20 mx-auto mb-3 lg:mb-4"></div>
+                              </div>
+                              
+                              <div className="flex-grow flex flex-col justify-center text-center">
+                                <h1 className="text-xs sm:text-sm lg:text-lg font-bold text-gray-800 leading-tight mb-3 lg:mb-4">
+                                  Listener Perceptions of Accented Synthetic Speech
+                                </h1>
+                                <h2 className="text-[10px] sm:text-xs lg:text-base text-gray-600 mb-3 lg:mb-4">
+                                  Analyzing the Impact of L1
+                                </h2>
+                              </div>
+                              
+                              <div className="text-center border-t border-gray-300 pt-2 lg:pt-3">
+                                <p className="text-xs sm:text-sm lg:text-base font-semibold text-gray-700">2025</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="book-spread flex relative justify-center">
+                          <div className="book-page-left w-32 h-52 sm:w-40 sm:h-60 lg:w-64 lg:h-96 rounded-l-md shadow-xl overflow-hidden" style={{ transform: 'rotateY(-8deg)' }}>
+                            {pageImages[bookStates[currentPage].leftPage] ? (
+                              <img 
+                                src={pageImages[bookStates[currentPage].leftPage]}
+                                alt={`Research paper page ${bookStates[currentPage].leftPage}`}
+                                className="w-full h-full object-cover object-top rounded-l-md"
+                                onError={(e) => {
+                                  e.target.style.display = 'none'
+                                  e.target.nextSibling.style.display = 'flex'
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gray-100 animate-pulse rounded-l-md flex items-center justify-center">
+                                <div className="text-sm text-gray-500">Loading...</div>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="book-page-right w-32 h-52 sm:w-40 sm:h-60 lg:w-64 lg:h-96 rounded-r-md shadow-xl overflow-hidden" style={{ transform: 'rotateY(8deg)' }}>
+                            {pageImages[bookStates[currentPage].rightPage] ? (
+                              <img 
+                                src={pageImages[bookStates[currentPage].rightPage]}
+                                alt={`Research paper page ${bookStates[currentPage].rightPage}`}
+                                className="w-full h-full object-cover object-top rounded-r-md"
+                                onError={(e) => {
+                                  e.target.style.display = 'none'
+                                  e.target.nextSibling.style.display = 'flex'
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gray-100 animate-pulse rounded-r-md flex items-center justify-center">
+                                <div className="text-sm text-gray-500">Loading...</div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
-        {/* Bottom Section - Research Team with Centered Book */}
-        <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm flex-grow min-h-[200px] sm:min-h-[280px] md:min-h-[400px] lg:min-h-[600px] xl:h-[calc(100vh-400px)] mb-4 sm:mb-8">
-          <CardHeader className="text-center pb-0">
-            <CardTitle className="text-base sm:text-lg md:text-xl">Research Team & Paper</CardTitle>
-          </CardHeader>
-          <CardContent className="h-full -mt-2 sm:-mt-4 lg:-mt-8 px-2 sm:px-4 lg:px-6 pt-2 sm:pt-4">
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-6 h-full items-center">
-              
-              {/* Left Side - Research Team */}
-              <div className="lg:col-span-1 flex lg:flex-col justify-center lg:space-y-6 space-x-3 sm:space-x-4 lg:space-x-0 lg:-mt-16 order-2 lg:order-1">
-                {researchers.map((researcher, index) => (
-                  <div key={index} className="text-center space-y-2 sm:space-y-3 flex-1 lg:flex-none">
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-20 lg:h-20 lg:mx-auto rounded-full overflow-hidden border-2 sm:border-3 border-white shadow-lg bg-gray-100 mx-auto">
-                      {imageUrls[researcher.image] ? (
+                  {/* QR Code Section - Improved */}
+                  <div className="flex flex-col items-center space-y-4 bg-white/50 backdrop-blur-sm rounded-xl p-4 lg:p-6 shadow-lg border border-gray-200 ml-8">
+                    <h3 className="text-sm lg:text-base font-semibold text-gray-800 text-center">Scan to Access</h3>
+                    
+                    {/* QR Code - Larger */}
+                    <div className="h-28 w-28 sm:h-32 sm:w-32 lg:h-40 lg:w-40 rounded-xl overflow-hidden shadow-lg bg-white p-2">
+                      {qrCodeUrl ? (
                         <img 
-                          src={imageUrls[researcher.image]}
-                          alt={researcher.name}
-                          className="w-full h-full object-cover"
+                          src={qrCodeUrl}
+                          alt="QR Code for Survey, Game, LinkedIn and Research"
+                          className="w-full h-full object-cover rounded-lg"
                           onError={(e) => {
                             e.target.style.display = 'none'
                             e.target.nextSibling.style.display = 'flex'
                           }}
                         />
                       ) : (
-                        <div className="w-full h-full bg-gray-200 animate-pulse rounded-full"></div>
+                        <div className="w-full h-full bg-gray-100 animate-pulse rounded-lg"></div>
                       )}
-                      <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full hidden items-center justify-center text-white text-sm sm:text-lg font-bold">
-                        {researcher.name.split(' ').map(n => n[0]).join('')}
+                    </div>
+
+                    {/* Access Options - Better styling */}
+                    <div className="grid grid-cols-2 gap-2 lg:gap-3 text-center">
+                      <div className="bg-blue-50 rounded-lg p-2 border border-blue-200">
+                        <div className="text-blue-600 text-lg mb-1">📊</div>
+                        <div className="text-xs lg:text-sm font-medium text-blue-800">Survey</div>
                       </div>
-                    </div>
-                    <div className="text-xs sm:text-sm text-gray-700 font-medium px-1">
-                      {researcher.name}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-
-              {/* Center - 3D Opening Book */}
-              <div className="lg:col-span-2 flex items-center justify-center lg:-mt-16 order-1 lg:order-2 px-2 sm:px-4 py-2">
-                <div className="relative">
-                  <div className="book-container">
-                    <div className="transition-opacity duration-700 ease-in-out" key={currentPage}>
-                      {bookStates[currentPage].type === 'cover' ? (
-                        /* Research Paper Cover */
-                        <div className="book-cover w-28 h-36 sm:w-36 sm:h-44 md:w-48 md:h-60 lg:w-96 lg:h-[28rem] mx-auto">
-                          <div className="w-full h-full rounded-md sm:rounded-lg lg:rounded-xl shadow-lg sm:shadow-xl lg:shadow-2xl bg-white border p-2 sm:p-3 md:p-4 lg:p-12 flex flex-col justify-between transform transition-all duration-500">
-                            <div className="flex flex-col h-full">
-                              <div className="text-center mb-1 sm:mb-2 md:mb-3 lg:mb-8">
-                                <div className="text-[6px] sm:text-[8px] md:text-xs lg:text-sm uppercase tracking-widest text-gray-500 mb-1 sm:mb-2 lg:mb-4">Research Paper</div>
-                                <div className="border-t border-gray-300 w-4 sm:w-6 md:w-8 lg:w-24 mx-auto mb-1 sm:mb-2 md:mb-3 lg:mb-8"></div>
-                              </div>
-                              
-                              <div className="flex-grow flex flex-col justify-center text-center px-1 sm:px-2 md:px-3 lg:px-4">
-                                <h1 className="text-[8px] sm:text-[10px] md:text-sm lg:text-xl xl:text-2xl font-bold text-gray-800 leading-tight mb-1 sm:mb-2 md:mb-3 lg:mb-6">
-                                  Listener Perceptions of Accented Synthetic Speech
-                                </h1>
-                                <h2 className="text-[6px] sm:text-[8px] md:text-xs lg:text-lg text-gray-600 mb-1 sm:mb-2 md:mb-3 lg:mb-8">
-                                  Analyzing the Impact of L1
-                                </h2>
-                              </div>
-                              
-                              <div className="text-center border-t border-gray-300 pt-1 sm:pt-2 lg:pt-4">
-                                <p className="text-[8px] sm:text-[10px] md:text-sm lg:text-lg font-semibold text-gray-700">2025</p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        /* Open Book Spread */
-                        <div className="book-spread flex relative justify-center">
-                          {/* Left Page */}
-                          <div className="book-page-left w-28 h-36 sm:w-36 sm:h-44 md:w-48 md:h-60 lg:w-96 lg:h-[28rem] rounded-l-md sm:rounded-l-lg lg:rounded-l-xl shadow-lg sm:shadow-xl overflow-hidden"
-                               style={{ transform: 'rotateY(-8deg)' }}>
-                            {pageImages[bookStates[currentPage].leftPage] ? (
-                              <img 
-                                src={pageImages[bookStates[currentPage].leftPage]}
-                                alt={`Research paper page ${bookStates[currentPage].leftPage}`}
-                                className="w-full h-full object-cover object-top rounded-l-md sm:rounded-l-lg"
-                                onLoad={() => console.log(`Page ${bookStates[currentPage].leftPage} loaded successfully`)}
-                                onError={(e) => {
-                                  console.error(`Failed to load page ${bookStates[currentPage].leftPage}:`, e.target.src)
-                                  console.error('Error event:', e)
-                                  fetch(e.target.src).then(response => {
-                                    console.log(`Fetch response for page ${bookStates[currentPage].leftPage}:`, response.status, response.statusText)
-                                  }).catch(fetchError => {
-                                    console.error(`Fetch error for page ${bookStates[currentPage].leftPage}:`, fetchError)
-                                  })
-                                  e.target.style.display = 'none'
-                                  e.target.nextSibling.style.display = 'flex'
-                                }}
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-gray-100 animate-pulse rounded-l-md sm:rounded-l-lg lg:rounded-l-xl flex items-center justify-center">
-                                <div className="text-center">
-                                  <div className="text-xs sm:text-sm lg:text-base text-gray-500">Loading page {bookStates[currentPage].leftPage}...</div>
-                                </div>
-                              </div>
-                            )}
-                            <div className="w-full h-full bg-white border rounded-l-md sm:rounded-l-lg p-1 sm:p-2 lg:p-4 flex-col justify-center items-center hidden">
-                              <div className="text-center">
-                                <div className="text-sm sm:text-lg lg:text-2xl mb-1 sm:mb-2">📄</div>
-                                <div className="text-xs text-gray-500">Page {bookStates[currentPage].leftPage}</div>
-                                <div className="text-xs text-gray-400 mt-1">Failed to load</div>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {/* Right Page */}
-                          <div className="book-page-right w-28 h-36 sm:w-36 sm:h-44 md:w-48 md:h-60 lg:w-96 lg:h-[28rem] rounded-r-md sm:rounded-r-lg lg:rounded-r-xl shadow-lg sm:shadow-xl overflow-hidden"
-                               style={{ transform: 'rotateY(8deg)' }}>
-                            {pageImages[bookStates[currentPage].rightPage] ? (
-                              <img 
-                                src={pageImages[bookStates[currentPage].rightPage]}
-                                alt={`Research paper page ${bookStates[currentPage].rightPage}`}
-                                className="w-full h-full object-cover object-top rounded-r-md sm:rounded-r-lg"
-                                onLoad={() => console.log(`Page ${bookStates[currentPage].rightPage} loaded successfully`)}
-                                onError={(e) => {
-                                  console.error(`Failed to load page ${bookStates[currentPage].rightPage}:`, e.target.src)
-                                  e.target.style.display = 'none'
-                                  e.target.nextSibling.style.display = 'flex'
-                                }}
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-gray-100 animate-pulse rounded-r-md sm:rounded-r-lg lg:rounded-r-xl flex items-center justify-center">
-                                <div className="text-center">
-                                  <div className="text-xs sm:text-sm lg:text-base text-gray-500">Loading page {bookStates[currentPage].rightPage}...</div>
-                                </div>
-                              </div>
-                            )}
-                            <div className="w-full h-full bg-white border rounded-r-md sm:rounded-r-lg p-1 sm:p-2 lg:p-4 flex-col justify-center items-center hidden">
-                              <div className="text-center">
-                                <div className="text-sm sm:text-lg lg:text-2xl mb-1 sm:mb-2">📄</div>
-                                <div className="text-xs text-gray-500">Page {bookStates[currentPage].rightPage}</div>
-                                <div className="text-xs text-gray-400 mt-1">Failed to load</div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Side - QR Code */}
-              <div className="lg:col-span-1 flex flex-col items-center justify-center lg:-mt-16 order-3">
-                <div className="text-center">
-                  <h3 className="text-xs sm:text-sm lg:text-base font-medium text-gray-700 mb-3 sm:mb-4 lg:mb-6">Linkedin & Research</h3>
-                  <div className="h-20 w-20 sm:h-28 sm:w-28 md:h-32 md:w-32 lg:h-40 lg:w-40 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-                    {qrCodeUrl ? (
-                      <img 
-                        src={qrCodeUrl}
-                        alt="QR Code for LinkedIn and Research"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.style.display = 'none'
-                          e.target.nextSibling.style.display = 'flex'
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gray-100 animate-pulse rounded-xl"></div>
-                    )}
-                    <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl hidden items-center justify-center border-2 border-dashed border-gray-300">
-                      <div className="text-center">
-                        <div className="text-lg sm:text-2xl lg:text-3xl mb-1 sm:mb-2">📄</div>
-                        <p className="text-xs text-gray-600 font-medium">QR Loading...</p>
+                      <div className="bg-green-50 rounded-lg p-2 border border-green-200">
+                        <div className="text-green-600 text-lg mb-1">🎮</div>
+                        <div className="text-xs lg:text-sm font-medium text-green-800">Game</div>
+                      </div>
+                      <div className="bg-indigo-50 rounded-lg p-2 border border-indigo-200">
+                        <div className="text-indigo-600 text-lg mb-1">👔</div>
+                        <div className="text-xs lg:text-sm font-medium text-indigo-800">LinkedIn</div>
+                      </div>
+                      <div className="bg-purple-50 rounded-lg p-2 border border-purple-200">
+                        <div className="text-purple-600 text-lg mb-1">📄</div>
+                        <div className="text-xs lg:text-sm font-medium text-purple-800">Research</div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </CardContent>
+            </Card>
+          </div>
 
-            </div>
-          </CardContent>
-        </Card>
+          {/* Right Side - Leaderboard */}
+          <div className="col-span-12 lg:col-span-3">
+            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm h-full">
+              <CardHeader className="text-center pb-2">
+                <CardTitle className="text-base sm:text-lg lg:text-xl text-gray-700 flex items-center justify-center gap-2 font-semibold">
+                  <span>🏆</span> Accent Guessing Game Leaderboard
+                </CardTitle>
+                {leaderboardData.length > 0 && (
+                  <p className="text-sm text-gray-500 mt-1 font-medium">
+                    {leaderboardData.length} total players
+                  </p>
+                )}
+              </CardHeader>
+              <CardContent className="px-3 sm:px-4 pb-3">
+                {leaderboardError ? (
+                  <div className="text-center py-8">
+                    <div className="text-3xl mb-3">⚠️</div>
+                    <p className="text-red-500 text-xs">Temporarily unavailable</p>
+                  </div>
+                ) : leaderboardData.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="text-3xl mb-3">🎯</div>
+                    <p className="text-gray-500 text-xs">No players yet!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    {leaderboardData.slice(0, 10).map((player, index) => (
+                      <div
+                        key={player.id}
+                        className={`
+                          flex items-center justify-between py-2 px-3 rounded-lg border transition-all duration-300
+                          ${index === 0 ? 'bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-300' :
+                            index === 1 ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-300' :
+                            index === 2 ? 'bg-gradient-to-r from-purple-50 to-violet-50 border-purple-300' :
+                            'bg-gradient-to-r from-slate-50 to-gray-50 border-slate-200'
+                          }
+                        `}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <div className={`font-bold min-w-[2rem] ${index < 3 ? 'text-xl sm:text-2xl' : 'text-base sm:text-lg'}`}>
+                            {getRankIcon(index)}
+                          </div>
+                          <div className="text-sm sm:text-base font-semibold text-gray-800 truncate max-w-[7rem] sm:max-w-[9rem]">
+                            {player.name}
+                          </div>
+                        </div>
+                        <div className={`px-3 py-1.5 rounded-full text-sm font-bold border ${getScoreColor(player.score)}`}>
+                          {player.score}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
 
         {/* Footer */}
         <div className="text-center mt-2 sm:mt-2 flex-shrink-0">
