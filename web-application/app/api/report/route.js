@@ -28,7 +28,7 @@ export async function GET(request) {
     const userResponse = allResponses.find(r => r.ResponseId === responseId)
     
     if (!userResponse) {
-      return NextResponse.json({ error: 'Response not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Response not found', isWaiting: true }, { status: 202 })
     }
 
     // Extract all question-related data from the response

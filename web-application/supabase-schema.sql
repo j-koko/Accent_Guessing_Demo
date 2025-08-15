@@ -66,3 +66,27 @@ FOR SELECT USING (true);
 
 -- Create index on ResponseId for faster lookups
 CREATE INDEX idx_responses_response_id ON public.responses(ResponseId);
+
+-- Create guessing_game table for storing game results
+CREATE TABLE public.guessing_game (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name        TEXT NOT NULL,
+  score       INTEGER NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.guessing_game ENABLE ROW LEVEL SECURITY;
+
+-- Create policy to allow anonymous inserts (for saving game results)
+CREATE POLICY "Allow anonymous inserts on guessing_game" ON public.guessing_game
+FOR INSERT WITH CHECK (true);
+
+-- Create policy to allow anonymous reads (for leaderboard/stats)
+CREATE POLICY "Allow anonymous reads on guessing_game" ON public.guessing_game
+FOR SELECT USING (true);
+
+-- Create index on score for faster leaderboard queries
+CREATE INDEX idx_guessing_game_score ON public.guessing_game(score DESC);
+
+-- Create index on created_at for chronological queries
+CREATE INDEX idx_guessing_game_created_at ON public.guessing_game(created_at DESC);
