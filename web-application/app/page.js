@@ -406,13 +406,13 @@ export default function Home() {
             </div>
 
             {/* Research Section */}
-            <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm flex-grow">
+            <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm flex-grow overflow-visible">
               <CardHeader className="text-center pb-2">
                 <CardTitle className="text-base sm:text-lg lg:text-xl text-gray-700 font-semibold">Research Team & Paper</CardTitle>
               </CardHeader>
-              <CardContent className="flex flex-col items-center space-y-6 h-full">
-                {/* Research Team Avatars */}
-                <div className="flex justify-center space-x-4 sm:space-x-6">
+              <CardContent className="flex flex-col items-center h-full overflow-visible">
+                {/* Research Team Avatars - Moved lower with more space */}
+                <div className="flex justify-center space-x-4 sm:space-x-6 mt-6">
                   {researchers.map((researcher, index) => (
                     <div key={index} className="text-center">
                       <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full overflow-hidden border-2 border-white shadow-lg bg-gray-100 mx-auto mb-2">
@@ -440,115 +440,119 @@ export default function Home() {
                   ))}
                 </div>
 
-                {/* Paper Animation and QR Code Side by Side */}
-                <div className="flex-grow flex items-center justify-center space-x-12 lg:space-x-16">
-                  {/* Paper Animation - Larger */}
-                  <div className="book-container flex-shrink-0 w-80 h-52 sm:w-96 sm:h-60 lg:w-[576px] lg:h-96 flex items-center justify-center">
-                    <div className="transition-opacity duration-700 ease-in-out" key={currentPage}>
-                      {bookStates[currentPage].type === 'cover' ? (
-                        <div className="book-cover w-40 h-52 sm:w-48 sm:h-60 lg:w-64 lg:h-96 mx-auto">
-                          <div className="w-full h-full rounded-md sm:rounded-lg shadow-xl bg-white border p-3 sm:p-4 lg:p-8 flex flex-col justify-between">
-                            <div className="flex flex-col h-full">
-                              <div className="text-center mb-3">
-                                <div className="text-[8px] sm:text-xs lg:text-sm uppercase tracking-widest text-gray-500 mb-2 lg:mb-4">Research Paper</div>
-                                <div className="border-t border-gray-300 w-8 sm:w-12 lg:w-20 mx-auto mb-3 lg:mb-4"></div>
-                              </div>
-                              
-                              <div className="flex-grow flex flex-col justify-center text-center">
-                                <h1 className="text-xs sm:text-sm lg:text-lg font-bold text-gray-800 leading-tight mb-3 lg:mb-4">
-                                  Listener Perceptions of Accented Synthetic Speech
-                                </h1>
-                                <h2 className="text-[10px] sm:text-xs lg:text-base text-gray-600 mb-3 lg:mb-4">
-                                  Analyzing the Impact of L1
-                                </h2>
-                              </div>
-                              
-                              <div className="text-center border-t border-gray-300 pt-2 lg:pt-3">
-                                <p className="text-xs sm:text-sm lg:text-base font-semibold text-gray-700">2025</p>
+                {/* Paper Animation and QR Code Section */}
+                <div className="flex-grow w-full relative mt-8">
+                  {/* Paper Animation - Centered */}
+                  <div className="absolute left-1/2 top-1/2 transform -translate-x-3/4 -translate-y-56 z-10">
+                    <div className="book-container w-96 h-64 sm:w-[450px] sm:h-72 lg:w-[500px] lg:h-96 flex items-center justify-center">
+                      <div className="transition-opacity duration-700 ease-in-out" key={currentPage}>
+                        {bookStates[currentPage].type === 'cover' ? (
+                          <div className="book-cover w-48 h-64 sm:w-56 sm:h-72 lg:w-72 lg:h-96">
+                            <div className="w-full h-full rounded-md sm:rounded-lg shadow-xl bg-white border p-3 sm:p-4 lg:p-6 flex flex-col justify-between">
+                              <div className="flex flex-col h-full">
+                                <div className="text-center mb-3">
+                                  <div className="text-[8px] sm:text-xs lg:text-sm uppercase tracking-widest text-gray-500 mb-2 lg:mb-4">Research Paper</div>
+                                  <div className="border-t border-gray-300 w-8 sm:w-12 lg:w-16 mx-auto mb-3 lg:mb-4"></div>
+                                </div>
+                                
+                                <div className="flex-grow flex flex-col justify-center text-center">
+                                  <h1 className="text-xs sm:text-sm lg:text-lg font-bold text-gray-800 leading-tight mb-3 lg:mb-4">
+                                    Listener Perceptions of Accented Synthetic Speech
+                                  </h1>
+                                  <h2 className="text-[10px] sm:text-xs lg:text-base text-gray-600 mb-3 lg:mb-4">
+                                    Analyzing the Impact of L1
+                                  </h2>
+                                </div>
+                                
+                                <div className="text-center border-t border-gray-300 pt-2 lg:pt-3">
+                                  <p className="text-xs sm:text-sm lg:text-base font-semibold text-gray-700">2025</p>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="book-spread flex relative justify-center">
-                          <div className="book-page-left w-32 h-52 sm:w-40 sm:h-60 lg:w-64 lg:h-96 rounded-l-md shadow-xl overflow-hidden" style={{ transform: 'rotateY(-8deg)' }}>
-                            {pageImages[bookStates[currentPage].leftPage] ? (
-                              <img 
-                                src={pageImages[bookStates[currentPage].leftPage]}
-                                alt={`Research paper page ${bookStates[currentPage].leftPage}`}
-                                className="w-full h-full object-cover object-top rounded-l-md"
-                                onError={(e) => {
-                                  e.target.style.display = 'none'
-                                  e.target.nextSibling.style.display = 'flex'
-                                }}
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-gray-100 animate-pulse rounded-l-md flex items-center justify-center">
-                                <div className="text-sm text-gray-500">Loading...</div>
-                              </div>
-                            )}
+                        ) : (
+                          <div className="book-spread flex relative">
+                            <div className="book-page-left w-40 h-64 sm:w-48 sm:h-72 lg:w-64 lg:h-96 rounded-l-md shadow-xl overflow-hidden" style={{ transform: 'rotateY(-8deg)' }}>
+                              {pageImages[bookStates[currentPage].leftPage] ? (
+                                <img 
+                                  src={pageImages[bookStates[currentPage].leftPage]}
+                                  alt={`Research paper page ${bookStates[currentPage].leftPage}`}
+                                  className="w-full h-full object-cover object-top rounded-l-md"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none'
+                                    e.target.nextSibling.style.display = 'flex'
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-gray-100 animate-pulse rounded-l-md flex items-center justify-center">
+                                  <div className="text-sm text-gray-500">Loading...</div>
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="book-page-right w-40 h-64 sm:w-48 sm:h-72 lg:w-64 lg:h-96 rounded-r-md shadow-xl overflow-hidden" style={{ transform: 'rotateY(8deg)' }}>
+                              {pageImages[bookStates[currentPage].rightPage] ? (
+                                <img 
+                                  src={pageImages[bookStates[currentPage].rightPage]}
+                                  alt={`Research paper page ${bookStates[currentPage].rightPage}`}
+                                  className="w-full h-full object-cover object-top rounded-r-md"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none'
+                                    e.target.nextSibling.style.display = 'flex'
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-gray-100 animate-pulse rounded-r-md flex items-center justify-center">
+                                  <div className="text-sm text-gray-500">Loading...</div>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          
-                          <div className="book-page-right w-32 h-52 sm:w-40 sm:h-60 lg:w-64 lg:h-96 rounded-r-md shadow-xl overflow-hidden" style={{ transform: 'rotateY(8deg)' }}>
-                            {pageImages[bookStates[currentPage].rightPage] ? (
-                              <img 
-                                src={pageImages[bookStates[currentPage].rightPage]}
-                                alt={`Research paper page ${bookStates[currentPage].rightPage}`}
-                                className="w-full h-full object-cover object-top rounded-r-md"
-                                onError={(e) => {
-                                  e.target.style.display = 'none'
-                                  e.target.nextSibling.style.display = 'flex'
-                                }}
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-gray-100 animate-pulse rounded-r-md flex items-center justify-center">
-                                <div className="text-sm text-gray-500">Loading...</div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  {/* QR Code Section - Improved */}
-                  <div className="flex flex-col items-center space-y-4 bg-white/50 backdrop-blur-sm rounded-xl p-4 lg:p-6 shadow-lg border border-gray-200 ml-8">
-                    <h3 className="text-sm lg:text-base font-semibold text-gray-800 text-center">Scan to Access</h3>
-                    
-                    {/* QR Code - Larger */}
-                    <div className="h-28 w-28 sm:h-32 sm:w-32 lg:h-40 lg:w-40 rounded-xl overflow-hidden shadow-lg bg-white p-2">
-                      {qrCodeUrl ? (
-                        <img 
-                          src={qrCodeUrl}
-                          alt="QR Code for Survey, Game, LinkedIn and Research"
-                          className="w-full h-full object-cover rounded-lg"
-                          onError={(e) => {
-                            e.target.style.display = 'none'
-                            e.target.nextSibling.style.display = 'flex'
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gray-100 animate-pulse rounded-lg"></div>
-                      )}
-                    </div>
-
-                    {/* Access Options - Better styling */}
-                    <div className="grid grid-cols-2 gap-2 lg:gap-3 text-center">
-                      <div className="bg-blue-50 rounded-lg p-2 border border-blue-200">
-                        <div className="text-blue-600 text-lg mb-1">📊</div>
-                        <div className="text-xs lg:text-sm font-medium text-blue-800">Survey</div>
+                  {/* QR Code Section - Positioned at Right Edge */}
+                  <div className="absolute right-8 top-1/2 transform -translate-y-2/3 z-20">
+                    <div className="flex flex-col items-center space-y-6">
+                      {/* Top Text */}
+                      <div className="flex gap-8">
+                        <span className="text-base lg:text-lg font-extrabold text-gray-800 uppercase tracking-wide">Survey</span>
+                        <span className="text-base lg:text-lg font-extrabold text-gray-800 uppercase tracking-wide">Game</span>
                       </div>
-                      <div className="bg-green-50 rounded-lg p-2 border border-green-200">
-                        <div className="text-green-600 text-lg mb-1">🎮</div>
-                        <div className="text-xs lg:text-sm font-medium text-green-800">Game</div>
+                      
+                      {/* QR Code with Corner Emojis */}
+                      <div className="relative">
+                        <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-100">
+                          <div className="relative h-32 w-32 sm:h-36 sm:w-36 lg:h-40 lg:w-40 rounded-lg overflow-hidden bg-gray-50">
+                            {qrCodeUrl ? (
+                              <img 
+                                src={qrCodeUrl}
+                                alt="QR Code for Survey, Game, LinkedIn and Research"
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.style.display = 'none'
+                                  e.target.nextSibling.style.display = 'flex'
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gray-100 animate-pulse"></div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Corner Emojis - Outside corners, tilted inward */}
+                        <div className="absolute -top-6 -left-6 text-2xl bg-white rounded-full p-1 shadow-md transform rotate-12">📊</div>
+                        <div className="absolute -top-6 -right-6 text-2xl bg-white rounded-full p-1 shadow-md transform -rotate-12">🎮</div>
+                        <div className="absolute -bottom-6 -left-6 text-2xl bg-white rounded-full p-1 shadow-md transform -rotate-12">👔</div>
+                        <div className="absolute -bottom-6 -right-6 text-2xl bg-white rounded-full p-1 shadow-md transform rotate-12">📄</div>
                       </div>
-                      <div className="bg-indigo-50 rounded-lg p-2 border border-indigo-200">
-                        <div className="text-indigo-600 text-lg mb-1">👔</div>
-                        <div className="text-xs lg:text-sm font-medium text-indigo-800">LinkedIn</div>
-                      </div>
-                      <div className="bg-purple-50 rounded-lg p-2 border border-purple-200">
-                        <div className="text-purple-600 text-lg mb-1">📄</div>
-                        <div className="text-xs lg:text-sm font-medium text-purple-800">Research</div>
+                      
+                      {/* Bottom Text */}
+                      <div className="flex gap-6">
+                        <span className="text-base lg:text-lg font-extrabold text-gray-800 uppercase tracking-wide">LinkedIn</span>
+                        <span className="text-base lg:text-lg font-extrabold text-gray-800 uppercase tracking-wide">Research</span>
                       </div>
                     </div>
                   </div>
