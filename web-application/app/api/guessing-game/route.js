@@ -45,6 +45,7 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit')) || 10
+    const offset = parseInt(searchParams.get('offset')) || 0
     const orderBy = searchParams.get('orderBy') || 'score'
     const order = searchParams.get('order') || 'desc'
 
@@ -62,6 +63,12 @@ export async function GET(request) {
       query = query.limit(limit)
     }
 
+    if (offset > 0) {
+      query = query.range(offset, offset + limit - 1)
+    } else if (limit > 0) {
+      query = query.limit(limit)
+    }
+
     const { data, error } = await query
 
     if (error) {
@@ -69,7 +76,7 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Database error' }, { status: 500 })
     }
 
-    // Get total count
+    // Get total count and global stats
     const { count, error: countError } = await supabase
       .from('guessing_game')
       .select('*', { count: 'exact', head: true })
@@ -79,9 +86,26 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Database error' }, { status: 500 })
     }
 
+    // Get global statistics
+    const { data: statsData, error: statsError } = await supabase
+      .from('guessing_game')
+      .select('score')
+
+    let globalStats = {
+      averageScore: 0,
+      highestScore: 0
+    }
+
+    if (!statsError && statsData && statsData.length > 0) {
+      const scores = statsData.map(player => player.score)
+      globalStats.averageScore = Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length)
+      globalStats.highestScore = Math.max(...scores)
+    }
+
     return NextResponse.json({
       data,
-      total: count
+      total: count,
+      globalStats
     })
     
   } catch (error) {
