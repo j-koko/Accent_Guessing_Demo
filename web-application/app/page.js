@@ -259,34 +259,194 @@ export default function Home() {
   return (
     <>
       <style jsx>{`
+        .research-grid {
+          display: grid;
+          grid-template-rows: auto 1fr;
+          grid-template-columns: 1fr;
+          grid-template-areas: 
+            "avatars"
+            "content";
+          height: 100%;
+          gap: clamp(0.5rem, 2vw, 1.5rem);
+        }
+        
+        @media (min-width: 768px) and (max-width: 1279px) {
+          .research-grid {
+            grid-template-rows: auto auto auto;
+            grid-template-areas: 
+              "avatars"
+              "book"
+              "qr";
+          }
+        }
+        
+        @media (min-width: 1280px) {
+          .research-grid {
+            grid-template-columns: 1fr auto;
+            grid-template-areas: 
+              "avatars avatars"
+              "book qr";
+          }
+        }
+        
+        .avatars-section {
+          grid-area: avatars;
+        }
+        
+        .book-section {
+          grid-area: book;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 0;
+        }
+        
+        .qr-section {
+          grid-area: qr;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 0;
+        }
+        
+        .content-section {
+          grid-area: content;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: clamp(1rem, 4vw, 2rem);
+          min-height: 0;
+        }
+        
+        @media (min-width: 1280px) {
+          .content-section {
+            display: contents;
+          }
+        }
+        
         .book-container {
-          perspective: 1500px;
+          perspective: clamp(800px, 150vw, 1500px);
           perspective-origin: center center;
-          min-width: 320px;
-          min-height: 208px;
+          width: 100%;
+          max-width: clamp(180px, 45vw, 500px);
+          aspect-ratio: 1.2;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        @media (max-width: 640px) {
+          .book-container {
+            max-width: clamp(160px, 80vw, 300px);
+            aspect-ratio: 1.1;
+          }
+        }
+        
+        @media (min-width: 641px) and (max-width: 1024px) {
+          .book-container {
+            max-width: clamp(200px, 60vw, 400px);
+          }
         }
         
         .book-cover {
+          width: 50%;
+          height: 100%;
+          aspect-ratio: 0.7;
+          transform-style: preserve-3d;
+          transition: all 0.8s ease-in-out;
+          margin: 0 auto;
+        }
+        
+        .book-spread {
+          width: 100%;
+          height: 100%;
+          max-width: 100%;
+          max-height: 100%;
           transform-style: preserve-3d;
           transition: all 0.8s ease-in-out;
         }
         
-        .book-spread {
+        .book-page-left, .book-page-right {
           transform-style: preserve-3d;
+          will-change: transform;
+          transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          width: 50%;
+          height: 100%;
+          aspect-ratio: 0.7;
         }
         
         .book-page-left {
-          transform-style: preserve-3d;
           transform-origin: right center;
-          will-change: transform;
-          transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
         
         .book-page-right {
-          transform-style: preserve-3d;
           transform-origin: left center;
-          will-change: transform;
-          transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .qr-container {
+          width: clamp(100px, 18vw, 200px);
+          aspect-ratio: 1;
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: clamp(0.4rem, 1.5vw, 1rem);
+        }
+        
+        @media (max-width: 640px) {
+          .qr-container {
+            width: clamp(80px, 25vw, 150px);
+          }
+        }
+        
+        @media (min-width: 641px) and (max-width: 1024px) {
+          .qr-container {
+            width: clamp(120px, 20vw, 180px);
+          }
+        }
+        
+        .qr-code-wrapper {
+          width: 100%;
+          aspect-ratio: 1;
+          position: relative;
+          padding: clamp(0.75rem, 3vw, 1.5rem);
+        }
+        
+        .qr-emoji {
+          position: absolute;
+          width: clamp(1.5rem, 4vw, 2.5rem);
+          height: clamp(1.5rem, 4vw, 2.5rem);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: white;
+          border-radius: 50%;
+          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+          font-size: clamp(0.75rem, 2vw, 1.25rem);
+        }
+        
+        .qr-text {
+          font-size: clamp(0.75rem, 2vw, 1rem);
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: #374151;
+        }
+        
+        .language-flow {
+          animation: flowRightToLeft linear infinite;
+          white-space: nowrap;
+          font-size: clamp(0.7rem, 1.5vw, 1rem);
+        }
+        
+        @keyframes flowRightToLeft {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-100vw);
+          }
         }
         
         .page-transition-enter {
@@ -310,69 +470,75 @@ export default function Home() {
           transform: scale(0.95);
           transition: opacity 0.4s ease-in, transform 0.4s ease-in;
         }
-        
-        .language-flow {
-          animation: flowRightToLeft linear infinite;
-          white-space: nowrap;
-        }
-        
-        @keyframes flowRightToLeft {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-100vw);
-          }
-        }
-        
-        .viewport-adaptive {
-          height: clamp(300px, 100vh - 200px, 800px);
-        }
-        
-        .full-screen-flex {
-          display: flex;
-          flex-direction: column;
-          height: 100vh;
-          max-height: 100vh;
-        }
       `}</style>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-x-hidden">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 min-h-screen max-h-screen flex flex-col">
+        <div className="container mx-auto min-h-screen flex flex-col" style={{ 
+          padding: 'clamp(0.5rem, 2vw, 1.5rem) clamp(0.5rem, 3vw, 2rem)'
+        }}>
         {/* Header */}
-        <div className="text-center mb-4 sm:mb-6">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-4xl font-bold text-primary mb-2 tracking-tight">
-            Accent Perception
-            <span className="block text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-xl sm:text-2xl lg:text-3xl xl:text-4xl">
-              Research Dashboard
-            </span>
+        <div className="text-center" style={{ marginBottom: 'clamp(0.75rem, 3vw, 1.5rem)' }}>
+          <h1 
+            className="font-bold text-primary tracking-tight leading-tight"
+            style={{ 
+              fontSize: 'clamp(1.125rem, 5vw, 3rem)',
+              marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)'
+            }}
+          >
+            <span className="hidden sm:inline">Accent Perception Research Dashboard</span>
+            <span className="sm:hidden">Accent Research Dashboard</span>
           </h1>
-          <div className="flex items-center justify-center gap-2">
-            <span className={`w-2 h-2 rounded-full animate-pulse ${
-              error ? 'bg-red-500' : isLoading ? 'bg-yellow-500' : 'bg-green-500'
-            }`}></span>
-            <p className="text-xs sm:text-sm text-muted-foreground">
+          <div className="flex items-center justify-center" style={{ gap: 'clamp(0.25rem, 1vw, 0.5rem)' }}>
+            <span 
+              className={`rounded-full animate-pulse ${
+                error ? 'bg-red-500' : isLoading ? 'bg-yellow-500' : 'bg-green-500'
+              }`}
+              style={{ 
+                width: 'clamp(0.375rem, 1vw, 0.5rem)', 
+                height: 'clamp(0.375rem, 1vw, 0.5rem)' 
+              }}
+            ></span>
+            <p 
+              className="text-muted-foreground"
+              style={{ fontSize: 'clamp(0.625rem, 2vw, 0.875rem)' }}
+            >
               {error ? 'Stats Unavailable' : isLoading ? 'Loading...' : 'Live Statistics'}
             </p>
           </div>
         </div>
 
         {/* Main Grid Layout */}
-        <div className="grid grid-cols-12 gap-4 sm:gap-6 flex-grow overflow-hidden">
+        <div className="grid grid-cols-12 flex-grow overflow-hidden" style={{ gap: 'clamp(0.5rem, 1.5vw, 1.5rem)' }}>
           {/* Left Side - Stats and Research Section */}
-          <div className="col-span-12 lg:col-span-9 flex flex-col space-y-4">
+          <div className="col-span-12 xl:col-span-9 flex flex-col" style={{ gap: 'clamp(0.5rem, 1.5vw, 1rem)' }}>
             {/* Top Row - Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 'clamp(0.5rem, 1.5vw, 1rem)' }}>
               {/* Participants Card */}
               <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-                <CardHeader className="text-center pb-2">
-                  <CardTitle className="text-sm sm:text-base text-gray-700">Survey Participants</CardTitle>
+                <CardHeader className="text-center" style={{ paddingBottom: 'clamp(0.25rem, 1vw, 0.5rem)' }}>
+                  <CardTitle 
+                    className="text-gray-700"
+                    style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1rem)' }}
+                  >
+                    Survey Participants
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="text-center">
-                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-600 mb-1 font-mono">
+                  <div 
+                    className="font-bold text-blue-600 font-mono"
+                    style={{ 
+                      fontSize: 'clamp(1.5rem, 6vw, 3rem)',
+                      marginBottom: 'clamp(0.25rem, 1vw, 0.25rem)'
+                    }}
+                  >
                     {isLoading ? '---' : stats.participants}
                   </div>
                   {error && (
-                    <p className="text-xs text-red-500 mt-1">Real-time data unavailable</p>
+                    <p 
+                      className="text-red-500 mt-1"
+                      style={{ fontSize: 'clamp(0.625rem, 1.5vw, 0.75rem)' }}
+                    >
+                      Real-time data unavailable
+                    </p>
                   )}
                 </CardContent>
               </Card>
@@ -404,145 +570,60 @@ export default function Home() {
                   </div>
                 )}
                 
-                <CardHeader className="text-center pb-2 relative z-10">
-                  <CardTitle className="text-sm sm:text-base text-gray-700">Languages Represented</CardTitle>
+                <CardHeader className="text-center relative z-10" style={{ paddingBottom: 'clamp(0.25rem, 1vw, 0.5rem)' }}>
+                  <CardTitle 
+                    className="text-gray-700"
+                    style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1rem)' }}
+                  >
+                    Languages Represented
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="text-center relative z-10">
-                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-indigo-600 mb-1 font-mono">
+                  <div 
+                    className="font-bold text-indigo-600 font-mono"
+                    style={{ 
+                      fontSize: 'clamp(1.5rem, 6vw, 3rem)',
+                      marginBottom: 'clamp(0.25rem, 1vw, 0.25rem)'
+                    }}
+                  >
                     {isLoading ? '---' : stats.nationalities}
                   </div>
                   {error && (
-                    <p className="text-xs text-red-500 mt-1">Real-time data unavailable</p>
+                    <p 
+                      className="text-red-500 mt-1"
+                      style={{ fontSize: 'clamp(0.625rem, 1.5vw, 0.75rem)' }}
+                    >
+                      Real-time data unavailable
+                    </p>
                   )}
                 </CardContent>
               </Card>
             </div>
 
             {/* Research Section */}
-            <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm flex-grow overflow-hidden">
-              <CardHeader className="text-center pb-2">
-                <CardTitle className="text-base sm:text-lg lg:text-xl text-gray-700 font-semibold">Research Team & Paper</CardTitle>
+            <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm flex-grow overflow-hidden min-h-0">
+              <CardHeader className="text-center pb-1 sm:pb-2 flex-shrink-0">
+                <CardTitle style={{ fontSize: 'clamp(1rem, 4vw, 2rem)' }} className="text-gray-700 font-semibold">Research Team & Paper</CardTitle>
               </CardHeader>
-              <CardContent className="flex flex-col items-center h-full overflow-hidden relative">
-                {/* Research Team Avatars - Moved lower with more space */}
-                <div className="flex justify-center space-x-4 sm:space-x-6 mt-6">
-                  {researchers.map((researcher, index) => (
-                    <div key={index} className="text-center">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full overflow-hidden border-2 border-white shadow-lg bg-gray-100 mx-auto mb-2">
-                        {imageUrls[researcher.image] ? (
-                          <img 
-                            src={imageUrls[researcher.image]}
-                            alt={researcher.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.target.style.display = 'none'
-                              e.target.nextSibling.style.display = 'flex'
+              <CardContent className="h-full overflow-hidden relative" style={{ padding: 'clamp(0.75rem, 3vw, 1.5rem)' }}>
+                <div className="research-grid">
+                  
+                  {/* Research Team Avatars */}
+                  <div className="avatars-section">
+                    <div className="flex justify-center gap-[clamp(0.5rem,2vw,1.5rem)]">
+                      {researchers.map((researcher, index) => (
+                        <div key={index} className="text-center">
+                          <div 
+                            className="rounded-full overflow-hidden border-2 border-white shadow-lg bg-gray-100 mx-auto mb-1"
+                            style={{ 
+                              width: 'clamp(2.5rem, 8vw, 6rem)', 
+                              height: 'clamp(2.5rem, 8vw, 6rem)' 
                             }}
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-200 animate-pulse rounded-full"></div>
-                        )}
-                        <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full hidden items-center justify-center text-white text-sm font-bold">
-                          {researcher.name.split(' ').map(n => n[0]).join('')}
-                        </div>
-                      </div>
-                      <div className="text-xs text-gray-700 font-medium">
-                        {researcher.name}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Paper Animation and QR Code Section */}
-                <div className="flex-grow w-full relative mt-8 min-h-0">
-                  {/* Paper Animation - Centered */}
-                  <div className="absolute left-1/2 top-44 transform -translate-x-3/4 -translate-y-1/2 z-10">
-                    <div className="book-container w-96 h-64 sm:w-[450px] sm:h-72 lg:w-[500px] lg:h-96 flex items-center justify-center">
-                      <div className="transition-opacity duration-700 ease-in-out" key={currentPage}>
-                        {bookStates[currentPage].type === 'cover' ? (
-                          <div className="book-cover w-48 h-64 sm:w-56 sm:h-72 lg:w-72 lg:h-96">
-                            <div className="w-full h-full rounded-md sm:rounded-lg shadow-xl bg-white border p-3 sm:p-4 lg:p-6 flex flex-col justify-between">
-                              <div className="flex flex-col h-full">
-                                <div className="text-center mb-3">
-                                  <div className="text-[8px] sm:text-xs lg:text-sm uppercase tracking-widest text-gray-500 mb-2 lg:mb-4">Research Paper</div>
-                                  <div className="border-t border-gray-300 w-8 sm:w-12 lg:w-16 mx-auto mb-3 lg:mb-4"></div>
-                                </div>
-                                
-                                <div className="flex-grow flex flex-col justify-center text-center">
-                                  <h1 className="text-xs sm:text-sm lg:text-lg font-bold text-gray-800 leading-tight mb-3 lg:mb-4">
-                                    Listener Perceptions of Accented Synthetic Speech
-                                  </h1>
-                                  <h2 className="text-[10px] sm:text-xs lg:text-base text-gray-600 mb-3 lg:mb-4">
-                                    Analyzing the Impact of L1
-                                  </h2>
-                                </div>
-                                
-                                <div className="text-center border-t border-gray-300 pt-2 lg:pt-3">
-                                  <p className="text-xs sm:text-sm lg:text-base font-semibold text-gray-700">2025</p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="book-spread flex relative">
-                            <div className="book-page-left w-40 h-64 sm:w-48 sm:h-72 lg:w-64 lg:h-96 rounded-l-md shadow-xl overflow-hidden" style={{ transform: 'rotateY(-8deg)' }}>
-                              {pageImages[bookStates[currentPage].leftPage] ? (
-                                <img 
-                                  src={pageImages[bookStates[currentPage].leftPage]}
-                                  alt={`Research paper page ${bookStates[currentPage].leftPage}`}
-                                  className="w-full h-full object-cover object-top rounded-l-md"
-                                  onError={(e) => {
-                                    e.target.style.display = 'none'
-                                    e.target.nextSibling.style.display = 'flex'
-                                  }}
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-gray-100 animate-pulse rounded-l-md flex items-center justify-center">
-                                  <div className="text-sm text-gray-500">Loading...</div>
-                                </div>
-                              )}
-                            </div>
-                            
-                            <div className="book-page-right w-40 h-64 sm:w-48 sm:h-72 lg:w-64 lg:h-96 rounded-r-md shadow-xl overflow-hidden" style={{ transform: 'rotateY(8deg)' }}>
-                              {pageImages[bookStates[currentPage].rightPage] ? (
-                                <img 
-                                  src={pageImages[bookStates[currentPage].rightPage]}
-                                  alt={`Research paper page ${bookStates[currentPage].rightPage}`}
-                                  className="w-full h-full object-cover object-top rounded-r-md"
-                                  onError={(e) => {
-                                    e.target.style.display = 'none'
-                                    e.target.nextSibling.style.display = 'flex'
-                                  }}
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-gray-100 animate-pulse rounded-r-md flex items-center justify-center">
-                                  <div className="text-sm text-gray-500">Loading...</div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* QR Code Section - Positioned at Right Edge */}
-                  <div className="absolute right-8 top-1/3 transform -translate-y-1/2 z-20">
-                    <div className="flex flex-col items-center space-y-6">
-                      {/* Top Text */}
-                      <div className="flex gap-8">
-                        <span className="text-base lg:text-lg font-extrabold text-gray-800 uppercase tracking-wide">Survey</span>
-                        <span className="text-base lg:text-lg font-extrabold text-gray-800 uppercase tracking-wide">Game</span>
-                      </div>
-                      
-                      {/* QR Code with Corner Emojis */}
-                      <div className="relative">
-                        <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-100">
-                          <div className="relative h-32 w-32 sm:h-36 sm:w-36 lg:h-40 lg:w-40 rounded-lg overflow-hidden bg-gray-50">
-                            {qrCodeUrl ? (
+                          >
+                            {imageUrls[researcher.image] ? (
                               <img 
-                                src={qrCodeUrl}
-                                alt="QR Code for Survey, Game, LinkedIn and Research"
+                                src={imageUrls[researcher.image]}
+                                alt={researcher.name}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
                                   e.target.style.display = 'none'
@@ -550,24 +631,169 @@ export default function Home() {
                                 }}
                               />
                             ) : (
-                              <div className="w-full h-full bg-gray-100 animate-pulse"></div>
+                              <div className="w-full h-full bg-gray-200 animate-pulse rounded-full"></div>
                             )}
+                            <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full hidden items-center justify-center text-white text-sm font-bold">
+                              {researcher.name.split(' ').map(n => n[0]).join('')}
+                            </div>
+                          </div>
+                          <div 
+                            className="text-gray-700 font-medium"
+                            style={{ fontSize: 'clamp(0.6rem, 1.5vw, 0.875rem)' }}
+                          >
+                            {researcher.name}
                           </div>
                         </div>
-                        
-                        {/* Corner Emojis - Outside corners, tilted inward */}
-                        <div className="absolute -top-6 -left-6 text-2xl bg-white rounded-full p-1 shadow-md transform rotate-12">📊</div>
-                        <div className="absolute -top-6 -right-6 text-2xl bg-white rounded-full p-1 shadow-md transform -rotate-12">🎮</div>
-                        <div className="absolute -bottom-6 -left-6 text-2xl bg-white rounded-full p-1 shadow-md transform -rotate-12">👔</div>
-                        <div className="absolute -bottom-6 -right-6 text-2xl bg-white rounded-full p-1 shadow-md transform rotate-12">📄</div>
-                      </div>
-                      
-                      {/* Bottom Text */}
-                      <div className="flex gap-6">
-                        <span className="text-base lg:text-lg font-extrabold text-gray-800 uppercase tracking-wide">LinkedIn</span>
-                        <span className="text-base lg:text-lg font-extrabold text-gray-800 uppercase tracking-wide">Research</span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Content Section - Stacks on mobile, splits on desktop */}
+                  <div className="content-section">
+                    
+                    {/* Book Animation Section */}
+                    <div className="book-section">
+                      <div className="book-container">
+                        <div className="transition-opacity duration-700 ease-in-out" key={currentPage}>
+                          {bookStates[currentPage].type === 'cover' ? (
+                            <div className="book-cover">
+                              <div className="w-full h-full rounded-lg shadow-xl bg-white border flex flex-col justify-between" style={{ padding: 'clamp(0.5rem, 2vw, 1.5rem)' }}>
+                                <div className="flex flex-col h-full">
+                                  <div className="text-center" style={{ marginBottom: 'clamp(0.25rem, 1vw, 0.75rem)' }}>
+                                    <div 
+                                      className="uppercase tracking-widest text-gray-500"
+                                      style={{ 
+                                        fontSize: 'clamp(0.5rem, 1.5vw, 0.875rem)',
+                                        marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)'
+                                      }}
+                                    >
+                                      Research Paper
+                                    </div>
+                                    <div 
+                                      className="border-t border-gray-300 mx-auto"
+                                      style={{ width: 'clamp(1rem, 4vw, 4rem)' }}
+                                    ></div>
+                                  </div>
+                                  
+                                  <div className="flex-grow flex flex-col justify-center text-center">
+                                    <h1 
+                                      className="font-bold text-gray-800 leading-tight"
+                                      style={{ 
+                                        fontSize: 'clamp(0.5rem, 2vw, 1.125rem)',
+                                        marginBottom: 'clamp(0.25rem, 1vw, 0.75rem)'
+                                      }}
+                                    >
+                                      Listener Perceptions of Accented Synthetic Speech
+                                    </h1>
+                                    <h2 
+                                      className="text-gray-600"
+                                      style={{ 
+                                        fontSize: 'clamp(0.4rem, 1.5vw, 1rem)',
+                                        marginBottom: 'clamp(0.25rem, 1vw, 0.75rem)'
+                                      }}
+                                    >
+                                      Analyzing the Impact of L1
+                                    </h2>
+                                  </div>
+                                  
+                                  <div className="text-center border-t border-gray-300" style={{ paddingTop: 'clamp(0.25rem, 1vw, 0.75rem)' }}>
+                                    <p 
+                                      className="font-semibold text-gray-700"
+                                      style={{ fontSize: 'clamp(0.5rem, 1.5vw, 1rem)' }}
+                                    >
+                                      2025
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="book-spread flex relative">
+                              <div className="book-page-left rounded-l-lg shadow-xl overflow-hidden" style={{ transform: 'rotateY(-8deg)' }}>
+                                {pageImages[bookStates[currentPage].leftPage] ? (
+                                  <img 
+                                    src={pageImages[bookStates[currentPage].leftPage]}
+                                    alt={`Research paper page ${bookStates[currentPage].leftPage}`}
+                                    className="w-full h-full object-cover object-top rounded-l-lg"
+                                    onError={(e) => {
+                                      e.target.style.display = 'none'
+                                      e.target.nextSibling.style.display = 'flex'
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-gray-100 animate-pulse rounded-l-lg flex items-center justify-center">
+                                    <div className="text-gray-500" style={{ fontSize: 'clamp(0.5rem, 1.5vw, 0.875rem)' }}>Loading...</div>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              <div className="book-page-right rounded-r-lg shadow-xl overflow-hidden" style={{ transform: 'rotateY(8deg)' }}>
+                                {pageImages[bookStates[currentPage].rightPage] ? (
+                                  <img 
+                                    src={pageImages[bookStates[currentPage].rightPage]}
+                                    alt={`Research paper page ${bookStates[currentPage].rightPage}`}
+                                    className="w-full h-full object-cover object-top rounded-r-lg"
+                                    onError={(e) => {
+                                      e.target.style.display = 'none'
+                                      e.target.nextSibling.style.display = 'flex'
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-gray-100 animate-pulse rounded-r-lg flex items-center justify-center">
+                                    <div className="text-gray-500" style={{ fontSize: 'clamp(0.5rem, 1.5vw, 0.875rem)' }}>Loading...</div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
+
+                    {/* QR Code Section */}
+                    <div className="qr-section">
+                      <div className="qr-container">
+                        {/* Top Text */}
+                        <div className="flex gap-[clamp(0.75rem,3vw,2rem)]">
+                          <span className="qr-text">Survey</span>
+                          <span className="qr-text">Game</span>
+                        </div>
+                        
+                        {/* QR Code with Corner Emojis */}
+                        <div className="qr-code-wrapper">
+                          <div className="bg-white rounded-xl shadow-lg border border-gray-100 w-full h-full" style={{ padding: 'clamp(0.5rem, 2vw, 1rem)' }}>
+                            <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-50">
+                              {qrCodeUrl ? (
+                                <img 
+                                  src={qrCodeUrl}
+                                  alt="QR Code for Survey, Game, LinkedIn and Research"
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none'
+                                    e.target.nextSibling.style.display = 'flex'
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-gray-100 animate-pulse"></div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Corner Emojis */}
+                          <div className="qr-emoji" style={{ top: '0', left: '0', transform: 'rotate(12deg)' }}>📊</div>
+                          <div className="qr-emoji" style={{ top: '0', right: '0', transform: 'rotate(-12deg)' }}>🎮</div>
+                          <div className="qr-emoji" style={{ bottom: '0', left: '0', transform: 'rotate(-12deg)' }}>👔</div>
+                          <div className="qr-emoji" style={{ bottom: '0', right: '0', transform: 'rotate(12deg)' }}>📄</div>
+                        </div>
+                        
+                        {/* Bottom Text */}
+                        <div className="flex gap-[clamp(0.75rem,3vw,1.5rem)]">
+                          <span className="qr-text">LinkedIn</span>
+                          <span className="qr-text">Research</span>
+                        </div>
+                      </div>
+                    </div>
+                    
                   </div>
                 </div>
               </CardContent>
@@ -575,36 +801,38 @@ export default function Home() {
           </div>
 
           {/* Right Side - Leaderboard */}
-          <div className="col-span-12 lg:col-span-3">
+          <div className="col-span-12 xl:col-span-3">
             <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm h-full">
               <CardHeader className="text-center pb-2">
-                <CardTitle className="text-base sm:text-lg lg:text-xl text-gray-700 flex items-center justify-center gap-2 font-semibold">
-                  <span>🏆</span> Accent Guessing Game Leaderboard
+                <CardTitle className="text-base sm:text-lg lg:text-xl xl:text-2xl text-gray-700 flex items-center justify-center gap-2 font-semibold">
+                  <span>🏆</span> 
+                  <span className="sm:hidden">Accent Game</span>
+                  <span className="hidden lg:inline">Leaderboard</span>
                 </CardTitle>
                 {totalPlayers > 0 && (
-                  <p className="text-sm text-gray-500 mt-1 font-medium">
+                  <p className="text-xs sm:text-sm lg:text-base text-gray-500 mt-1 font-medium">
                     {totalPlayers} total players
                   </p>
                 )}
               </CardHeader>
-              <CardContent className="px-3 sm:px-4 pb-3 flex-1 flex flex-col">
+              <CardContent className="px-2 sm:px-3 lg:px-4 pb-3 flex-1 flex flex-col">
                 {leaderboardError ? (
-                  <div className="text-center py-8">
-                    <div className="text-3xl mb-3">⚠️</div>
-                    <p className="text-red-500 text-xs">Temporarily unavailable</p>
+                  <div className="text-center py-6 lg:py-8">
+                    <div className="text-2xl lg:text-3xl mb-2 lg:mb-3">⚠️</div>
+                    <p className="text-red-500 text-xs lg:text-sm">Temporarily unavailable</p>
                   </div>
                 ) : leaderboardData.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="text-3xl mb-3">🎯</div>
-                    <p className="text-gray-500 text-xs">No players yet!</p>
+                  <div className="text-center py-6 lg:py-8">
+                    <div className="text-2xl lg:text-3xl mb-2 lg:mb-3">🎯</div>
+                    <p className="text-gray-500 text-xs lg:text-sm">No players yet!</p>
                   </div>
                 ) : (
-                  <div className="flex-1 flex flex-col justify-between space-y-1">
+                  <div className="flex-1 flex flex-col justify-between space-y-1 lg:space-y-2">
                     {leaderboardData.slice(0, 10).map((player, index) => (
                       <div
                         key={player.id}
                         className={`
-                          flex items-center justify-between py-3 px-3 rounded-lg border transition-all duration-300
+                          flex items-center justify-between py-2 sm:py-2.5 lg:py-3 px-2 sm:px-3 rounded-lg border transition-all duration-300
                           ${index === 0 ? 'bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-300' :
                             index === 1 ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-300' :
                             index === 2 ? 'bg-gradient-to-r from-purple-50 to-violet-50 border-purple-300' :
@@ -612,15 +840,15 @@ export default function Home() {
                           }
                         `}
                       >
-                        <div className="flex items-center space-x-2">
-                          <div className={`font-bold min-w-[2rem] ${index < 3 ? 'text-xl sm:text-2xl' : 'text-base sm:text-lg'}`}>
+                        <div className="flex items-center space-x-1.5 sm:space-x-2 lg:space-x-3">
+                          <div className={`font-bold min-w-[1.5rem] sm:min-w-[2rem] ${index < 3 ? 'text-lg sm:text-xl lg:text-2xl' : 'text-sm sm:text-base lg:text-lg'}`}>
                             {getRankIcon(index)}
                           </div>
-                          <div className="text-sm sm:text-base font-semibold text-gray-800 truncate max-w-[7rem] sm:max-w-[9rem]">
+                          <div className="text-xs sm:text-sm lg:text-base font-semibold text-gray-800 truncate max-w-[5rem] sm:max-w-[7rem] lg:max-w-[9rem] xl:max-w-[6rem]">
                             {player.name}
                           </div>
                         </div>
-                        <div className={`px-3 py-1.5 rounded-full text-sm font-bold border ${getScoreColor(player.score)}`}>
+                        <div className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-bold border ${getScoreColor(player.score)}`}>
                           {player.score}
                         </div>
                       </div>
@@ -633,8 +861,11 @@ export default function Home() {
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-2 sm:mt-2 flex-shrink-0">
-          <p className="text-xs text-muted-foreground">
+        <div className="text-center flex-shrink-0" style={{ marginTop: 'clamp(0.5rem, 2vw, 1.5rem)' }}>
+          <p 
+            className="text-muted-foreground"
+            style={{ fontSize: 'clamp(0.625rem, 1.5vw, 0.875rem)' }}
+          >
             Last updated: {stats.lastUpdated}
           </p>
         </div>
