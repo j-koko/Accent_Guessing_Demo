@@ -840,15 +840,15 @@ export default function Home() {
                           }
                         `}
                       >
-                        <div className="flex items-center space-x-1.5 sm:space-x-2 lg:space-x-3">
-                          <div className={`font-bold min-w-[1.5rem] sm:min-w-[2rem] ${index < 3 ? 'text-lg sm:text-xl lg:text-2xl' : 'text-sm sm:text-base lg:text-lg'}`}>
+                        <div className="flex items-center space-x-1.5 sm:space-x-2 lg:space-x-3 flex-1 min-w-0">
+                          <div className={`font-bold min-w-[1.5rem] sm:min-w-[2rem] flex-shrink-0 ${index < 3 ? 'text-lg sm:text-xl lg:text-2xl' : 'text-sm sm:text-base lg:text-lg'}`}>
                             {getRankIcon(index)}
                           </div>
-                          <div className="text-xs sm:text-sm lg:text-base font-semibold text-gray-800 truncate max-w-[5rem] sm:max-w-[7rem] lg:max-w-[9rem] xl:max-w-[6rem]">
+                          <div className="text-xs sm:text-sm lg:text-base font-semibold text-gray-800 truncate flex-1 min-w-0">
                             {player.name}
                           </div>
                         </div>
-                        <div className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-bold border ${getScoreColor(player.score)}`}>
+                        <div className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-bold border flex-shrink-0 ${getScoreColor(player.score)}`}>
                           {player.score}
                         </div>
                       </div>
