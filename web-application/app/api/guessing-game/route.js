@@ -12,11 +12,25 @@ export async function POST(request) {
     const { name, score } = body
 
     if (!name || score === undefined || score === null) {
-      return NextResponse.json({ error: 'Name and score are required' }, { status: 400 })
+      return NextResponse.json({ error: 'Name and score are required' }, { 
+        status: 400,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+        }
+      })
     }
 
     if (typeof score !== 'number' || score < 0) {
-      return NextResponse.json({ error: 'Score must be a non-negative number' }, { status: 400 })
+      return NextResponse.json({ error: 'Score must be a non-negative number' }, { 
+        status: 400,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+        }
+      })
     }
 
     const insertData = {
@@ -30,14 +44,34 @@ export async function POST(request) {
 
     if (error) {
       console.error('Database error:', error)
-      return NextResponse.json({ error: 'Database error' }, { status: 500 })
+      return NextResponse.json({ error: 'Database error' }, { 
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+        }
+      })
     }
 
-    return NextResponse.json({ status: 'ok' })
+    return NextResponse.json({ status: 'ok' }, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+      }
+    })
     
   } catch (error) {
     console.error('Server error:', error)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    return NextResponse.json({ error: 'Server error' }, { 
+      status: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+      }
+    })
   }
 }
 
@@ -73,7 +107,14 @@ export async function GET(request) {
 
     if (error) {
       console.error('Database error:', error)
-      return NextResponse.json({ error: 'Database error' }, { status: 500 })
+      return NextResponse.json({ error: 'Database error' }, { 
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+        }
+      })
     }
 
     // Get total count and global stats
@@ -83,7 +124,14 @@ export async function GET(request) {
 
     if (countError) {
       console.error('Count error:', countError)
-      return NextResponse.json({ error: 'Database error' }, { status: 500 })
+      return NextResponse.json({ error: 'Database error' }, { 
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+        }
+      })
     }
 
     // Get global statistics
@@ -106,11 +154,24 @@ export async function GET(request) {
       data,
       total: count,
       globalStats
+    }, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+      }
     })
     
   } catch (error) {
     console.error('Server error:', error)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    return NextResponse.json({ error: 'Server error' }, { 
+      status: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+      }
+    })
   }
 }
 
