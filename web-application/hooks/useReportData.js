@@ -6,7 +6,6 @@ export const useReportData = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [responseId, setResponseId] = useState('')
-  const pollingTimeoutRef = useRef(null)
   const pollingIntervalRef = useRef(null)
   const startTimeRef = useRef(null)
 
@@ -21,41 +20,33 @@ export const useReportData = () => {
       
       if (response.ok) {
         const data = await response.json()
-        setReportData(data)
-        setLoading(false)
         
-        // Clear polling if data is found
-        if (pollingIntervalRef.current) {
-          clearInterval(pollingIntervalRef.current)
-          pollingIntervalRef.current = null
+        // Check if we have accent metrics data, if not, treat as "not ready yet"
+        if (data.accentMetrics) {
+          setReportData(data)
+          setLoading(false)
+          
+          // Clear polling if data is found
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current)
+            pollingIntervalRef.current = null
+          }
+          
+          return true
+        } else {
+          // Data exists but accentMetrics is not ready, continue polling
+          return false
         }
-        if (pollingTimeoutRef.current) {
-          clearTimeout(pollingTimeoutRef.current)
-          pollingTimeoutRef.current = null
-        }
-        
-        return true
       } else if (response.status === 202 || response.status === 404) {
-        // Data not found yet (either 202 waiting status or 404 not found), continue waiting
-        // Don't set loading to false or show error on initial fetch - let polling handle it
+        // Data not found yet, continue waiting
         return false
       } else {
-        // Only show error immediately if this is a polling request or a real server error
-        if (isPolling) {
-          return false
-        } else {
-          // For initial fetch with server errors, still start polling but don't show error yet
-          return false
-        }
+        // Server error, continue polling to retry
+        return false
       }
     } catch (err) {
-      // Only show error immediately if this is a polling request
-      if (isPolling) {
-        return false
-      } else {
-        // For initial fetch with network errors, still start polling but don't show error yet
-        return false
-      }
+      // Network error, continue polling to retry
+      return false
     }
   }
 
@@ -77,24 +68,10 @@ export const useReportData = () => {
           clearInterval(pollingIntervalRef.current)
           pollingIntervalRef.current = null
         }
-        if (pollingTimeoutRef.current) {
-          clearTimeout(pollingTimeoutRef.current)
-          pollingTimeoutRef.current = null
-        }
         setError('No accent data available for this response ID')
         setLoading(false)
       }
     }, 3000)
-    
-    // Set up timeout (20 seconds as fallback)
-    pollingTimeoutRef.current = setTimeout(() => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current)
-        pollingIntervalRef.current = null
-      }
-      setError('No accent data available for this response ID')
-      setLoading(false)
-    }, 20000)
   }
 
   const refetch = () => {
@@ -103,10 +80,6 @@ export const useReportData = () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current)
         pollingIntervalRef.current = null
-      }
-      if (pollingTimeoutRef.current) {
-        clearTimeout(pollingTimeoutRef.current)
-        pollingTimeoutRef.current = null
       }
       
       fetchReport(responseId)
@@ -137,9 +110,6 @@ export const useReportData = () => {
     return () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current)
-      }
-      if (pollingTimeoutRef.current) {
-        clearTimeout(pollingTimeoutRef.current)
       }
     }
   }, [])
