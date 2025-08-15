@@ -15,12 +15,16 @@ export default function Leaderboard() {
   const [lastUpdated, setLastUpdated] = useState(new Date().toLocaleTimeString())
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPlayers, setTotalPlayers] = useState(0)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const router = useRouter()
 
   const ITEMS_PER_PAGE = 10
 
-  const fetchAllLeaderboard = async () => {
+  const fetchAllLeaderboard = async (showLoading = false) => {
     try {
+      if (showLoading) {
+        setIsRefreshing(true)
+      }
       const response = await fetch(`${CONFIG.API.GUESSING_GAME}?orderBy=score&order=desc&limit=1000`)
       if (!response.ok) {
         throw new Error('Failed to fetch leaderboard data')
@@ -67,6 +71,10 @@ export default function Leaderboard() {
     } catch (err) {
       console.error('Error fetching leaderboard:', err)
       setError('Unable to load leaderboard data')
+    } finally {
+      if (showLoading) {
+        setIsRefreshing(false)
+      }
     }
   }
 
@@ -85,7 +93,7 @@ export default function Leaderboard() {
 
   const refreshLeaderboard = () => {
     setCurrentPage(1)
-    fetchAllLeaderboard()
+    fetchAllLeaderboard(true)
   }
 
   useEffect(() => {
@@ -220,9 +228,24 @@ export default function Leaderboard() {
               </CardTitle>
               <button
                 onClick={refreshLeaderboard}
-                className="flex items-center gap-2 px-3 md:px-4 py-2 rounded-md bg-white/10 hover:bg-white/20 border border-white/30 hover:border-white/50 transition-all text-white text-sm md:text-base"
+                disabled={isRefreshing}
+                className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-md border transition-all text-white text-sm md:text-base ${
+                  isRefreshing 
+                    ? 'bg-white/5 border-white/20 cursor-not-allowed opacity-75' 
+                    : 'bg-white/10 hover:bg-white/20 border-white/30 hover:border-white/50'
+                }`}
               >
-                <span>Refresh</span>
+                {isRefreshing ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span>Refreshing...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-sm">🔄</span>
+                    <span>Refresh</span>
+                  </>
+                )}
               </button>
             </div>
           </CardHeader>
