@@ -69,7 +69,20 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Database error' }, { status: 500 })
     }
 
-    return NextResponse.json(data)
+    // Get total count
+    const { count, error: countError } = await supabase
+      .from('guessing_game')
+      .select('*', { count: 'exact', head: true })
+
+    if (countError) {
+      console.error('Count error:', countError)
+      return NextResponse.json({ error: 'Database error' }, { status: 500 })
+    }
+
+    return NextResponse.json({
+      data,
+      total: count
+    })
     
   } catch (error) {
     console.error('Server error:', error)

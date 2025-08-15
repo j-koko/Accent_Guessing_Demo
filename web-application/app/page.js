@@ -41,6 +41,7 @@ export default function Home() {
   const [qrCodeUrl, setQrCodeUrl] = useState(null)
   const [stableLanguages, setStableLanguages] = useState(new Map()) // Track languages with stable positions
   const [leaderboardData, setLeaderboardData] = useState([])
+  const [totalPlayers, setTotalPlayers] = useState(0)
   const [leaderboardError, setLeaderboardError] = useState(null)
 
   const fetchStats = async () => {
@@ -71,8 +72,9 @@ export default function Home() {
       if (!response.ok) {
         throw new Error('Failed to fetch leaderboard data')
       }
-      const data = await response.json()
-      setLeaderboardData(data)
+      const result = await response.json()
+      setLeaderboardData(result.data || result)
+      setTotalPlayers(result.total || (result.data ? result.data.length : result.length))
       setLeaderboardError(null)
     } catch (err) {
       console.error('Error fetching leaderboard:', err)
@@ -568,13 +570,13 @@ export default function Home() {
                 <CardTitle className="text-base sm:text-lg lg:text-xl text-gray-700 flex items-center justify-center gap-2 font-semibold">
                   <span>🏆</span> Accent Guessing Game Leaderboard
                 </CardTitle>
-                {leaderboardData.length > 0 && (
+                {totalPlayers > 0 && (
                   <p className="text-sm text-gray-500 mt-1 font-medium">
-                    {leaderboardData.length} total players
+                    {totalPlayers} total players
                   </p>
                 )}
               </CardHeader>
-              <CardContent className="px-3 sm:px-4 pb-3">
+              <CardContent className="px-3 sm:px-4 pb-3 flex-1 flex flex-col">
                 {leaderboardError ? (
                   <div className="text-center py-8">
                     <div className="text-3xl mb-3">⚠️</div>
@@ -586,12 +588,12 @@ export default function Home() {
                     <p className="text-gray-500 text-xs">No players yet!</p>
                   </div>
                 ) : (
-                  <div className="space-y-1.5">
+                  <div className="flex-1 flex flex-col justify-between space-y-1.5">
                     {leaderboardData.slice(0, 10).map((player, index) => (
                       <div
                         key={player.id}
                         className={`
-                          flex items-center justify-between py-2 px-3 rounded-lg border transition-all duration-300
+                          flex items-center justify-between py-4 px-3 rounded-lg border transition-all duration-300
                           ${index === 0 ? 'bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-300' :
                             index === 1 ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-300' :
                             index === 2 ? 'bg-gradient-to-r from-purple-50 to-violet-50 border-purple-300' :
