@@ -21,7 +21,7 @@ const researchers = [
     image: "jan.webp"
   },
   {
-    name: "Stella S.",
+    name: "Stella Siu",
     image: "stella.webp"
   }
 ]

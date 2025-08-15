@@ -20,7 +20,7 @@ const researchers = [
     image: "jan.webp"
   },
   {
-    name: "Stella S.",
+    name: "Stella Siu",
     url: "https://www.linkedin.com/in/stellasiu0427/",
     image: "stella.webp"
   }
