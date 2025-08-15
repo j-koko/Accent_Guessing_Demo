@@ -324,9 +324,20 @@ export default function Home() {
             transform: translateX(-100vw);
           }
         }
+        
+        .viewport-adaptive {
+          height: clamp(300px, 100vh - 200px, 800px);
+        }
+        
+        .full-screen-flex {
+          display: flex;
+          flex-direction: column;
+          height: 100vh;
+          max-height: 100vh;
+        }
       `}</style>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-x-hidden">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 min-h-screen flex flex-col">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 min-h-screen max-h-screen flex flex-col">
         {/* Header */}
         <div className="text-center mb-4 sm:mb-6">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-4xl font-bold text-primary mb-2 tracking-tight">
@@ -346,7 +357,7 @@ export default function Home() {
         </div>
 
         {/* Main Grid Layout */}
-        <div className="grid grid-cols-12 gap-4 sm:gap-6 flex-grow">
+        <div className="grid grid-cols-12 gap-4 sm:gap-6 flex-grow overflow-hidden">
           {/* Left Side - Stats and Research Section */}
           <div className="col-span-12 lg:col-span-9 flex flex-col space-y-4">
             {/* Top Row - Stats */}
@@ -408,11 +419,11 @@ export default function Home() {
             </div>
 
             {/* Research Section */}
-            <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm flex-grow overflow-visible">
+            <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm flex-grow overflow-hidden">
               <CardHeader className="text-center pb-2">
                 <CardTitle className="text-base sm:text-lg lg:text-xl text-gray-700 font-semibold">Research Team & Paper</CardTitle>
               </CardHeader>
-              <CardContent className="flex flex-col items-center h-full overflow-visible">
+              <CardContent className="flex flex-col items-center h-full overflow-hidden relative">
                 {/* Research Team Avatars - Moved lower with more space */}
                 <div className="flex justify-center space-x-4 sm:space-x-6 mt-6">
                   {researchers.map((researcher, index) => (
@@ -443,9 +454,9 @@ export default function Home() {
                 </div>
 
                 {/* Paper Animation and QR Code Section */}
-                <div className="flex-grow w-full relative mt-8">
+                <div className="flex-grow w-full relative mt-8 min-h-0">
                   {/* Paper Animation - Centered */}
-                  <div className="absolute left-1/2 top-1/2 transform -translate-x-3/4 -translate-y-56 z-10">
+                  <div className="absolute left-1/2 top-44 transform -translate-x-3/4 -translate-y-1/2 z-10">
                     <div className="book-container w-96 h-64 sm:w-[450px] sm:h-72 lg:w-[500px] lg:h-96 flex items-center justify-center">
                       <div className="transition-opacity duration-700 ease-in-out" key={currentPage}>
                         {bookStates[currentPage].type === 'cover' ? (
@@ -516,7 +527,7 @@ export default function Home() {
                   </div>
 
                   {/* QR Code Section - Positioned at Right Edge */}
-                  <div className="absolute right-8 top-1/2 transform -translate-y-2/3 z-20">
+                  <div className="absolute right-8 top-1/3 transform -translate-y-1/2 z-20">
                     <div className="flex flex-col items-center space-y-6">
                       {/* Top Text */}
                       <div className="flex gap-8">
@@ -588,12 +599,12 @@ export default function Home() {
                     <p className="text-gray-500 text-xs">No players yet!</p>
                   </div>
                 ) : (
-                  <div className="flex-1 flex flex-col justify-between space-y-1.5">
+                  <div className="flex-1 flex flex-col justify-between space-y-1">
                     {leaderboardData.slice(0, 10).map((player, index) => (
                       <div
                         key={player.id}
                         className={`
-                          flex items-center justify-between py-4 px-3 rounded-lg border transition-all duration-300
+                          flex items-center justify-between py-3 px-3 rounded-lg border transition-all duration-300
                           ${index === 0 ? 'bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-300' :
                             index === 1 ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-300' :
                             index === 2 ? 'bg-gradient-to-r from-purple-50 to-violet-50 border-purple-300' :
