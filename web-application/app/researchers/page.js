@@ -178,10 +178,10 @@ export default function Researchers() {
                 {/* LinkedIn Button */}
                 <button
                   onClick={() => openLink(researcher.url)}
-                  className="bg-[#0077B5] hover:bg-[#005885] text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg active:scale-95"
+                  className="bg-[#0077B5] hover:bg-[#005885] text-white px-2 py-2 sm:px-4 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 sm:gap-2 shadow-md hover:shadow-lg active:scale-95 flex-shrink-0"
                 >
                   <LinkedInIcon />
-                  <span className="text-sm">LinkedIn</span>
+                  <span className="text-xs sm:text-sm hidden sm:inline">LinkedIn</span>
                 </button>
               </div>
             </div>
