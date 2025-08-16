@@ -2,12 +2,12 @@
 
 const accents = ["Polish", "Dutch", "Mandarin Chinese", "English"];
 
-const promptAccentMap = {
-  1: ["Polish", "Dutch", "Mandarin Chinese", "English"],
-  2: ["Dutch", "Mandarin Chinese", "English", "Polish"],
-  3: ["Mandarin Chinese", "English", "Polish", "Dutch"],
-  4: ["English", "Polish", "Dutch", "Mandarin Chinese"],
-  5: ["Polish", "Dutch", "Mandarin Chinese", "English"]
+// For Q2 only - mapping positions to accents
+const q2AccentMap = {
+  1: "Dutch", 
+  2: "Mandarin Chinese", 
+  3: "English", 
+  4: "Polish"
 };
 
 export function preprocessResponses(allResponses) {
@@ -32,40 +32,11 @@ export function preprocessResponses(allResponses) {
       accentRatings[`${accent}_pleasant`] = 0.0;
     });
 
-    const trustSums = {};
-    const pleasantSums = {};
-    const counts = {};
-    
+    // Calculate ratings for Q2 data only
     accents.forEach(accent => {
-      trustSums[accent] = 0.0;
-      pleasantSums[accent] = 0.0;
-      counts[accent] = 0;
-    });
-
-    // Process all 5 prompts
-    for (let promptNum = 1; promptNum <= 5; promptNum++) {
-      promptAccentMap[promptNum].forEach((accent, position) => {
-        const pos = position + 1; // 1-indexed
-        const trustScore = parseFloat(response[`q${promptNum}_${pos}a`]);
-        const pleasantScore = parseFloat(response[`q${promptNum}_${pos}b`]);
-        
-        if (!isNaN(trustScore)) {
-          trustSums[accent] += trustScore;
-          counts[accent] += 1;
-        }
-        if (!isNaN(pleasantScore)) {
-          pleasantSums[accent] += pleasantScore;
-          counts[accent] += 1;
-        }
-      });
-    }
-
-    // Calculate averages
-    accents.forEach(accent => {
-      accentRatings[`${accent}_trust`] = counts[accent] > 0 ? 
-        trustSums[accent] / counts[accent] : NaN;
-      accentRatings[`${accent}_pleasant`] = counts[accent] > 0 ? 
-        pleasantSums[accent] / counts[accent] : NaN;
+      const position = Object.keys(q2AccentMap).find(pos => q2AccentMap[pos] === accent);
+      accentRatings[`${accent}_trust`] = parseFloat(response[`q2_${position}a`]) || NaN;
+      accentRatings[`${accent}_pleasant`] = parseFloat(response[`q2_${position}b`]) || NaN;
     });
 
     return {
