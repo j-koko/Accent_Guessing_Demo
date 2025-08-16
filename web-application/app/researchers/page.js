@@ -121,7 +121,7 @@ export default function Researchers() {
               </div>
             </div>
             <button
-              onClick={() => openLink('#')}
+              onClick={() => openLink('https://rug.eu.qualtrics.com/jfe/form/SV_0VxvX7djOkM0VJY')}
               className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white py-2.5 sm:py-3 px-4 rounded-lg font-medium text-sm sm:text-base transition-all duration-200 shadow-md hover:shadow-lg active:scale-[0.98] flex items-center justify-center gap-2"
             >
               <span>Play Game</span>
