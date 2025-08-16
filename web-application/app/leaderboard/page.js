@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
@@ -35,7 +35,7 @@ export default function Leaderboard() {
     )
   }
 
-  const fetchAllLeaderboard = async (showLoading = false, searchName = null, isPolling = false) => {
+  const fetchAllLeaderboard = useCallback(async (showLoading = false, searchName = null, isPolling = false) => {
     try {
       if (showLoading && !isPolling) {
         setIsRefreshing(true)
@@ -121,7 +121,7 @@ export default function Leaderboard() {
         setIsInitialLoading(false)
       }
     }
-  }
+  }, [])
 
   const goToNextPage = () => {
     const maxPage = Math.ceil(totalPlayers / ITEMS_PER_PAGE)
@@ -136,7 +136,7 @@ export default function Leaderboard() {
     }
   }
 
-  const startPolling = (searchName) => {
+  const startPolling = useCallback((searchName) => {
     // Clear any existing polling first
     if (pollingIntervalRef.current) {
       clearInterval(pollingIntervalRef.current)
@@ -168,7 +168,7 @@ export default function Leaderboard() {
         fetchAllLeaderboard()
       }
     }, 3000)
-  }
+  }, [fetchAllLeaderboard])
 
   const refreshLeaderboard = () => {
     setCurrentPage(1)
@@ -213,7 +213,7 @@ export default function Leaderboard() {
         clearInterval(pollingIntervalRef.current)
       }
     }
-  }, [searchParams])
+  }, [searchParams, fetchAllLeaderboard, startPolling])
 
   const formatDate = (dateString) => {
     try {
@@ -317,7 +317,7 @@ export default function Leaderboard() {
               <div className="flex items-center gap-2 text-yellow-800">
                 <span className="text-lg">⚠️</span>
                 <p className="text-sm font-medium">
-                  We could not find "{searchParams.get('name')}" in the leaderboard data. 
+                  We could not find &quot;{searchParams.get('name')}&quot; in the leaderboard data. 
                   Showing the current leaderboard instead.
                 </p>
               </div>
