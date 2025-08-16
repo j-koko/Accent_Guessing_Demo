@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import ErrorMessage from '../components/ErrorMessage'
@@ -17,18 +18,33 @@ export default function Leaderboard() {
   const [totalPlayers, setTotalPlayers] = useState(0)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isInitialLoading, setIsInitialLoading] = useState(true)
+  const [isSearching, setIsSearching] = useState(false)
+  const [searchNotFound, setSearchNotFound] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const pollingIntervalRef = useRef(null)
+  const startTimeRef = useRef(null)
 
   const ITEMS_PER_PAGE = 10
 
-  const fetchAllLeaderboard = async (showLoading = false) => {
+  const findPlayerInData = (data, searchName) => {
+    if (!searchName || !Array.isArray(data)) return null
+    const normalizedSearchName = searchName.toLowerCase().trim()
+    return data.find(player => 
+      player.name && player.name.toLowerCase().trim() === normalizedSearchName
+    )
+  }
+
+  const fetchAllLeaderboard = async (showLoading = false, searchName = null, isPolling = false) => {
     try {
-      if (showLoading) {
+      if (showLoading && !isPolling) {
         setIsRefreshing(true)
       }
       
-      // Add 5 second delay
-      await new Promise(resolve => setTimeout(resolve, 5000))
+      // Add 5 second delay only for initial load or manual refresh, but not when searching for a name
+      if (!isPolling && !searchName) {
+        await new Promise(resolve => setTimeout(resolve, 5000))
+      }
       
       const response = await fetch(`${CONFIG.API.GUESSING_GAME}?orderBy=score&order=desc&limit=1000`)
       if (!response.ok) {
@@ -43,8 +59,27 @@ export default function Leaderboard() {
       // Ensure data is always an array
       const validData = Array.isArray(data) ? data : []
       
+      // Always update leaderboard data first
       setAllLeaderboardData(validData)
       setTotalPlayers(validData.length)
+      
+      // If searching for a specific name
+      if (searchName) {
+        const player = findPlayerInData(validData, searchName)
+        if (player) {
+          setIsSearching(false)
+          setSearchNotFound(false)
+          // Clear polling if player is found
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current)
+            pollingIntervalRef.current = null
+          }
+          return true // Player found
+        } else {
+          // Player not found
+          return false // Continue polling
+        }
+      }
       
       // Use global stats from API if available, otherwise calculate from all data
       if (globalStats && typeof globalStats.averageScore === 'number') {
@@ -72,14 +107,19 @@ export default function Leaderboard() {
       
       setLastUpdated(new Date().toLocaleTimeString())
       setError(null)
+      
+      return true
     } catch (err) {
       console.error('Error fetching leaderboard:', err)
       setError('Unable to load leaderboard data')
+      return false
     } finally {
-      if (showLoading) {
+      if (showLoading && !isPolling) {
         setIsRefreshing(false)
       }
-      setIsInitialLoading(false)
+      if (!searchName) {
+        setIsInitialLoading(false)
+      }
     }
   }
 
@@ -96,16 +136,84 @@ export default function Leaderboard() {
     }
   }
 
+  const startPolling = (searchName) => {
+    // Clear any existing polling first
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current)
+      pollingIntervalRef.current = null
+    }
+    
+    startTimeRef.current = Date.now()
+    
+    // Set up polling interval (every 3 seconds)
+    pollingIntervalRef.current = setInterval(async () => {
+      const found = await fetchAllLeaderboard(false, searchName, true)
+      if (found) {
+        // Player found, polling will be cleared in fetchAllLeaderboard
+        setIsInitialLoading(false)
+        return
+      }
+      
+      // Check if we should show error after 2 minutes
+      const elapsed = Date.now() - startTimeRef.current
+      if (elapsed >= 120000) {
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current)
+          pollingIntervalRef.current = null
+        }
+        setIsSearching(false)
+        setSearchNotFound(true)
+        setIsInitialLoading(false)
+        // Load default leaderboard after timeout
+        fetchAllLeaderboard()
+      }
+    }, 3000)
+  }
+
   const refreshLeaderboard = () => {
     setCurrentPage(1)
+    setSearchNotFound(false)
+    // Clear any existing polling
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current)
+      pollingIntervalRef.current = null
+    }
     fetchAllLeaderboard(true)
   }
 
   useEffect(() => {
-    fetchAllLeaderboard()
-    const interval = setInterval(fetchAllLeaderboard, CONFIG.REFRESH_INTERVALS.LEADERBOARD)
-    return () => clearInterval(interval)
-  }, [])
+    const searchName = searchParams.get('name')
+    
+    if (searchName && searchName.trim()) {
+      // If name parameter exists and has value, start search mode
+      setIsSearching(true)
+      setIsInitialLoading(true)
+      setSearchNotFound(false)
+      
+      // Try to fetch immediately
+      fetchAllLeaderboard(false, searchName.trim()).then((found) => {
+        if (!found) {
+          // If not found, start polling and keep loading state
+          startPolling(searchName.trim())
+          // Don't set isInitialLoading to false - keep searching
+        } else {
+          setIsInitialLoading(false)
+        }
+      })
+    } else {
+      // Default behavior - load normal leaderboard
+      fetchAllLeaderboard()
+      const interval = setInterval(fetchAllLeaderboard, CONFIG.REFRESH_INTERVALS.LEADERBOARD)
+      return () => clearInterval(interval)
+    }
+
+    // Cleanup function
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current)
+      }
+    }
+  }, [searchParams])
 
   const formatDate = (dateString) => {
     try {
@@ -204,6 +312,17 @@ export default function Leaderboard() {
               {error ? '❌ Data Unavailable' : 'Live Leaderboard'}
             </p>
           </div>
+          {searchNotFound && (
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg max-w-md mx-auto">
+              <div className="flex items-center gap-2 text-yellow-800">
+                <span className="text-lg">⚠️</span>
+                <p className="text-sm font-medium">
+                  We could not find "{searchParams.get('name')}" in the leaderboard data. 
+                  Showing the current leaderboard instead.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Stats Cards */}
