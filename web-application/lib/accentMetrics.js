@@ -14,6 +14,12 @@ export function preprocessResponses(allResponses) {
   return allResponses.map(response => {
     // Create L1 field from q1_language
     let L1 = String(response.q1_language || '');
+    
+    // Extract English part before "|" separator (handles both old and new formats)
+    if (L1.includes('|')) {
+      L1 = L1.split('|')[0].trim();
+    }
+    
     if (L1.toLowerCase().startsWith('other')) {
       L1 = `Other: ${response.q1_text || 'unspecified'}`;
     }

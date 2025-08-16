@@ -45,6 +45,11 @@ export async function GET() {
     const languageList = languageData.map(row => {
       let language = String(row.q1_language || '').trim()
       
+      // Extract English part before "|" separator (handles both old and new formats)
+      if (language.includes('|')) {
+        language = language.split('|')[0].trim();
+      }
+      
       // If language starts with "other", use the q1_text field (like in Python)
       if (language.toLowerCase().startsWith('other')) {
         const otherText = String(row.q1_text || '').trim()
