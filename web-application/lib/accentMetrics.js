@@ -91,10 +91,11 @@ export function calculateAccentMetrics(responseId, allResponses) {
   const voiceL1Avgs = {};
   accents.forEach(accent => {
     const accentResponses = voiceL1Responses.filter(r => r.L1 === accent);
-    const accentAvgs = calculateGroupAverages(accentResponses, allCols);
-    Object.keys(accentAvgs).forEach(col => {
-      voiceL1Avgs[col] = accentAvgs[col];
-    });
+    const trustCol = `${accent}_trust`;
+    const pleasantCol = `${accent}_pleasant`;
+    const accentAvgs = calculateGroupAverages(accentResponses, [trustCol, pleasantCol]);
+    voiceL1Avgs[trustCol] = accentAvgs[trustCol];
+    voiceL1Avgs[pleasantCol] = accentAvgs[pleasantCol];
   });
 
   // Prepare data for charts
